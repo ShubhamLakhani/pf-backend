@@ -1,0 +1,17 @@
+# compiled output
+dist/
+node_modules/
+build/
+
+.vercel
+
+# dotenv environment variable files
+.env*
+.env.dev
+.env.development
+.env.test
+.env.production
+.env.prod
+.env.local
+
+assets

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                              /* Emit modern JavaScript (Node.js 14+ supports ES2020). */
+    "module": "commonjs",                            /* Node.js uses CommonJS modules. */
+    "outDir": "./dist",                              /* Specify the output folder for compiled JavaScript files. */
+    "rootDir": "./src",                              /* Specify the root folder containing TypeScript files. */
+    "strict": true,                                  /* Enable strict type-checking options. */
+    "esModuleInterop": true,                         /* Enable compatibility with CommonJS. */
+    "forceConsistentCasingInFileNames": true,        /* Ensure consistent casing in file imports. */
+    "skipLibCheck": true                             /* Skip type checking for library declaration files. */
+  },
+  "include": ["src/**/*.ts"],                        /* Include all TypeScript files in the src folder. */
+  "exclude": ["node_modules", "dist"]                /* Exclude the node_modules and dist folders. */
+}
