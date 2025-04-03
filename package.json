@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r dotenv/config dist/index.js",
-    "start:prod": "node -r dotenv/config dist/index.js",
+    "start:prod": "pm2 start -r dotenv/config dist/index.js --name backend-api",
     "dev": "nodemon -r dotenv/config src/index.ts",
     "lint": "eslint . --ext .ts,.js"
   },
