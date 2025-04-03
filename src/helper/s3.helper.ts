@@ -8,8 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { UploadImageModuleEnum } from '../enums';
 import { sanitizeFileName } from './common.helper';
 
-const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
-dotenv.config({ path: envFile });
+// const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
+dotenv.config();
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION || '',

@@ -3,6 +3,9 @@ import express, { Request, Response } from 'express';
 import { connectDB } from './config/db';
 import swaggerJsdoc from './config/swagger';
 import routes from './routes';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const startApp = async () => {
   // Connect to MongoDB
