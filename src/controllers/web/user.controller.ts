@@ -37,7 +37,7 @@ export const getNextVaccinationData = async (
     const { petId } = req.query;
 
     const serviceVaccination = await serviceModel.findOne({
-      name: 'VACCINATIONS',
+      slug: 'vaccinations',
       serviceType: 'Home',
     });
 
