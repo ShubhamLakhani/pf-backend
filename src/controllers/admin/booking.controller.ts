@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { HTTP_STATUS } from '../../constants';
-import { UploadImageModuleEnum } from '../../enums';
+import { consultationTypeEnum, UploadImageModuleEnum } from '../../enums';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
 import {
   bookingModel,
@@ -14,8 +14,10 @@ import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { validation } from '../../utils/validate';
 import {
   queryMongoIdSchema,
+  travelUpdateValidationSchema,
   vaccinationUpdateLastRecordValidationSchema,
 } from '../../validations';
+import { ITravel, travelModel } from '../../models/travel';
 
 export const getBookingList = async (
   req: Request,
@@ -179,6 +181,8 @@ export const getConsultationList = async (
 ): Promise<any> => {
   try {
     const { userId, fromDate, toDate } = req.query;
+    let { consultationType } = req.query;
+    consultationType = consultationType ?? consultationTypeEnum.normal;
 
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
@@ -197,6 +201,7 @@ export const getConsultationList = async (
     const [consultation] = await consultationModel.aggregate([
       {
         $match: {
+          consultationType,
           ...(userId && {
             userId: new mongoose.Types.ObjectId(userId as string),
           }),
@@ -644,6 +649,187 @@ export const getBookingDetails = async (
     );
   } catch (error) {
     console.log('🚀 ~ error:', error);
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const getTravelList = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId, petId, travelType } = req.query;
+
+    const limit = +(req.query?.limit ?? 10);
+    const page = +(req.query?.page ?? 1);
+    const skip: number = (page - 1) * limit;
+
+    const [travel] = await travelModel.aggregate([
+      {
+        $match: {
+          ...(userId && {
+            userId: new mongoose.Types.ObjectId(userId as string),
+          }),
+          ...(petId && {
+            petId: new mongoose.Types.ObjectId(petId as string),
+          }),
+          ...(travelType && {
+            travelType,
+          }),
+        },
+      },
+      {
+        $lookup: {
+          from: 'pets',
+          localField: 'petId',
+          foreignField: '_id',
+          as: 'pet',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          petName: {
+            $first: '$pet.name',
+          },
+          petType: {
+            $first: '$pet.petType',
+          },
+          userName: {
+            $first: '$user.name',
+          },
+          travelType: 1,
+          travelDate: 1,
+          vaccinationRecord: 1,
+          isFitToTravelCertificate: 1,
+          isHealthCertificate: 1,
+          isBloodTiterTest: 1,
+          isNoObjectionCertificate: 1,
+          requiredCertificates: 1,
+          userId: 1,
+          paymentStatus: 1,
+          providerOrderId: 1,
+        },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
+          totalCount: [{ $count: 'total' }],
+        },
+      },
+      {
+        $addFields: {
+          totalCount: {
+            $ifNull: [{ $first: '$totalCount.total' }, 0],
+          },
+        },
+      },
+    ]);
+
+    return successResponse(
+      res,
+      'Travel get successfully',
+      travel,
+      HTTP_STATUS.OK
+    );
+  } catch (error) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const getTravelDetails = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { isValid, message, value } = validation<{ id: string }>(
+      req.params as any,
+      queryMongoIdSchema
+    );
+    if (!isValid) {
+      return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const { id } = value;
+
+    const travel = await travelModel.findOne({
+      _id: id,
+    });
+
+    if (!travel) {
+      return errorResponse(res, 'Travel not found.', HTTP_STATUS.NOT_FOUND);
+    }
+    return successResponse(
+      res,
+      'Travel details get successfully',
+      travel,
+      HTTP_STATUS.OK
+    );
+  } catch (error) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const updateTravelCertificate = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { isValid, message, value } = validation<ITravel>(
+      req.body,
+      travelUpdateValidationSchema
+    );
+    if (!isValid) {
+      return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const { _id, ...updateObj } = value;
+
+    const checkTravel = await travelModel.findOne({
+      _id,
+    });
+    if (!checkTravel) {
+      return errorResponse(res, 'Travel not found.', HTTP_STATUS.NOT_FOUND);
+    }
+
+    if (req.file) {
+      const image = await uploadFile(
+        req.file,
+        UploadImageModuleEnum.TRAVEL,
+        ''
+      );
+      if (!image.isValid) {
+        return errorResponse(
+          res,
+          'Error uploading image',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+      updateObj.travelCertificate = image.fileName;
+      if (checkTravel.travelCertificate) {
+        await deleteFile(checkTravel.travelCertificate);
+      }
+    } else {
+      delete updateObj.travelCertificate;
+    }
+
+    await travelModel.updateOne({ _id }, updateObj);
+
+    return successResponse(
+      res,
+      'Travel certificate updated successfully',
+      null,
+      HTTP_STATUS.OK
+    );
+  } catch (error) {
     return errorResponse(res, 'Internal Server Error');
   }
 };

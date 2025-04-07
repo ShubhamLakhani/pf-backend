@@ -19,3 +19,13 @@ export enum ConsultationStatusEnum {
   rescaduled = 'Rescaduled',
   canceled = 'Canceled',
 }
+
+export enum TravelTypeEnum {
+  domestic = 'Domestic',
+  international = 'International',
+}
+
+export enum consultationTypeEnum {
+  normal = 'Normal',
+  euthanasia = 'Euthanasia',
+}

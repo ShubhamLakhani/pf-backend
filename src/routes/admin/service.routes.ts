@@ -306,6 +306,7 @@ router.patch(
  *       required:
  *         - amount
  *         - discountedAmount
+ *         - consultationType
  *       properties:
  *         amount:
  *           type: number
@@ -315,6 +316,10 @@ router.patch(
  *           type: number
  *           description: The service item discount amount.
  *           example: 0
+ *         consultationType:
+ *           type: string
+ *           description: The type of the consultation
+ *           example: "Normal"
  *
  * /api/admin/service/update-price:
  *   patch:

@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { consultationTypeEnum } from '../enums';
 
 export const createServiceItemSchema = Joi.object({
   serviceId: Joi.string()
@@ -36,4 +37,7 @@ export const updateServiceSchema = Joi.object({
 export const updateServicePriceSchema = Joi.object({
   amount: Joi.number().required(),
   discountedAmount: Joi.number().default(0).required(),
+  consultationType: Joi.string()
+    .valid(...Object.values(consultationTypeEnum))
+    .required(),
 });

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { BookingPaymentStatusEnum } from '../enums';
 import { bookingModel, consultationModel } from '../models';
+import { travelModel } from '../models/travel';
 
 export const razorpayWebhook = async (req: any, res: any) => {
   console.log('Razorpay Webhook Received');
@@ -31,6 +32,17 @@ export const razorpayWebhook = async (req: any, res: any) => {
         );
       } else if (notes.isConsultationBooking) {
         await consultationModel.updateOne(
+          { providerOrderId: id },
+          {
+            $set: {
+              providerOrderStatus: status,
+              paymentStatus: BookingPaymentStatusEnum.success,
+              providerData: req.body,
+            },
+          }
+        );
+      } else if (notes.isTravelBooking) {
+        await travelModel.updateOne(
           { providerOrderId: id },
           {
             $set: {

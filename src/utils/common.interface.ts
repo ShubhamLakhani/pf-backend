@@ -1,4 +1,5 @@
 import { Document } from 'mongoose';
+import { consultationTypeEnum } from '../enums';
 
 export interface IMoongo extends Document {
   createdAt?: Date;
@@ -13,4 +14,5 @@ export interface OtpWithExpiry {
 export interface IServicePrice {
   amount: number;
   discountedAmount: number;
+  consultationType: consultationTypeEnum;
 }

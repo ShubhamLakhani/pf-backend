@@ -1,6 +1,10 @@
 import mongoose, { Schema } from 'mongoose';
 import { IMoongo } from '../utils/common.interface';
-import { BookingPaymentStatusEnum, ConsultationStatusEnum } from '../enums';
+import {
+  BookingPaymentStatusEnum,
+  ConsultationStatusEnum,
+  consultationTypeEnum,
+} from '../enums';
 
 // Define the Consultation interface
 export interface IConsultation extends IMoongo {
@@ -15,6 +19,7 @@ export interface IConsultation extends IMoongo {
   providerOrderStatus?: string;
   providerData?: any;
   consultationStatus?: ConsultationStatusEnum;
+  consultationType: consultationTypeEnum;
 }
 
 // Create the Consultation schema
@@ -45,6 +50,11 @@ const ConsultationSchema: Schema = new Schema(
       type: String,
       enum: ConsultationStatusEnum,
       default: ConsultationStatusEnum.pending,
+    },
+    consultationType: {
+      type: String,
+      enum: consultationTypeEnum,
+      default: consultationTypeEnum.normal,
     },
   },
   {

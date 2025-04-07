@@ -1,10 +1,15 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { HTTP_STATUS, serviceConsultationPriceObj } from '../../constants';
+import {
+  HTTP_STATUS,
+  serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationPriceObj,
+} from '../../constants';
 import { serviceItemsModel, serviceModel } from '../../models';
 import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { validation } from '../../utils/validate';
 import { paramMongoIdSchema } from '../../validations';
+import { consultationTypeEnum } from '../../enums';
 
 export const getServiceList = async (
   _req: Request,
@@ -184,13 +189,22 @@ export const getServiceItemDetails = async (
 };
 
 export const getServiceConsultationPrice = (
-  _req: Request,
+  req: Request,
   res: Response
 ): any => {
+  let { consultationType } = req.query;
+
+  consultationType = consultationType ?? consultationTypeEnum.normal;
+
+  const priceObj =
+    consultationType === consultationTypeEnum.euthanasia
+      ? serviceConsultationEuthanasiaPriceObj
+      : serviceConsultationPriceObj;
+
   return successResponse(
     res,
     'Service price get successfully',
-    serviceConsultationPriceObj,
+    priceObj,
     HTTP_STATUS.OK
   );
 };

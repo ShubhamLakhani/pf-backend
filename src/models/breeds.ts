@@ -6,7 +6,7 @@ export interface IBreeds extends IMoongo {
   _id: string;
   breed_name: string;
   slug: string;
-  pet_type: "dog" | "cat";
+  pet_type: 'dog' | 'cat';
 }
 
 // Create the Branch schema

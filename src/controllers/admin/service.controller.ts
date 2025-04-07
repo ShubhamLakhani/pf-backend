@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { HTTP_STATUS } from '../../constants';
-import { serviceConsultationPriceObj } from '../../constants/common.constants';
-import { UploadImageModuleEnum } from '../../enums';
+import {
+  serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationPriceObj,
+} from '../../constants/common.constants';
+import { consultationTypeEnum, UploadImageModuleEnum } from '../../enums';
 import { toSlug } from '../../helper/common.helper';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
 import {
@@ -434,19 +437,28 @@ export const setServiceConsultationPrice = async (
     if (!isValid) {
       return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
     }
+    const { consultationType, amount, discountedAmount } = value;
+
+    let updateFields: Record<string, any> = {};
+    updateFields[`metaData.${consultationType}.amount`] = amount;
+    updateFields[`metaData.${consultationType}.discountedAmount`] =
+      discountedAmount;
 
     await serviceConfigModel.updateOne(
       { name: 'CONSULTATION' },
       {
-        $set: {
-          'metaData.amount': value.amount,
-          'metaData.discountedAmount': value.discountedAmount,
-        },
+        $set: updateFields,
       }
     );
 
-    serviceConsultationPriceObj.amount = value.amount;
-    serviceConsultationPriceObj.discountedAmount = value.discountedAmount;
+    if (consultationType === consultationTypeEnum.euthanasia) {
+      serviceConsultationEuthanasiaPriceObj.amount = value.amount;
+      serviceConsultationEuthanasiaPriceObj.discountedAmount =
+        value.discountedAmount;
+    } else {
+      serviceConsultationPriceObj.amount = value.amount;
+      serviceConsultationPriceObj.discountedAmount = value.discountedAmount;
+    }
 
     return successResponse(
       res,

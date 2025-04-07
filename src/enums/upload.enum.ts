@@ -4,4 +4,5 @@ export enum UploadImageModuleEnum {
   VACCINATION_RECORD = 'vaccination_record',
   USER_PROFILE = 'user_profile',
   SERVICE = 'service',
+  TRAVEL = 'travel',
 }

@@ -1,7 +1,15 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { HTTP_STATUS, serviceConsultationPriceObj } from '../../constants';
-import { ConsultationStatusEnum, UploadImageModuleEnum } from '../../enums';
+import {
+  HTTP_STATUS,
+  serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationPriceObj,
+} from '../../constants';
+import {
+  ConsultationStatusEnum,
+  consultationTypeEnum,
+  UploadImageModuleEnum,
+} from '../../enums';
 import { razorpayPayment } from '../../helper/razorpay.helper';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
 import {
@@ -25,9 +33,11 @@ import {
   consultationUpdateValidationSchema,
   queryMongoIdSchema,
   signUpSchema,
+  travelBookingValidationSchema,
   vaccinationLastRecordValidationSchema,
   vaccinationUpdateLastRecordValidationSchema,
 } from '../../validations';
+import { ITravel, travelModel } from '../../models/travel';
 
 export const createBooking = async (
   req: Request,
@@ -85,7 +95,10 @@ export const createBooking = async (
       }
       serviceItem = data;
     } else {
-      const service = await serviceModel.findOne({ _id: value.serviceId });
+      const service = await serviceModel.findOne({
+        _id: value.serviceId,
+        slug: { $ne: 'travel' },
+      });
       if (!service) {
         return errorResponse(
           res,
@@ -331,6 +344,7 @@ export const createConsultation = async (
     const existingConsultation = await consultationModel.findOne({
       userId: res.locals.userId,
       endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
+      consultationType: value.consultationType,
     });
     if (existingConsultation) {
       return errorResponse(
@@ -349,6 +363,7 @@ export const createConsultation = async (
     const checkSlotAvailable = await consultationModel.findOne({
       startDateTime: { $gte: startDate },
       endDateTime: { $lte: endDate },
+      consultationType: value.consultationType,
     });
     if (checkSlotAvailable) {
       return errorResponse(
@@ -358,7 +373,10 @@ export const createConsultation = async (
       );
     }
 
-    const amount = serviceConsultationPriceObj.discountedAmount;
+    const amount =
+      value.consultationType === consultationTypeEnum.euthanasia
+        ? serviceConsultationEuthanasiaPriceObj.discountedAmount
+        : serviceConsultationPriceObj.discountedAmount;
     const razorpayOrder = await razorpayPayment(amount, {
       isConsultationBooking: true,
     });
@@ -388,7 +406,9 @@ export const getConsultationList = async (
 ): Promise<any> => {
   try {
     const { fromDate, toDate } = req.query;
+    let { consultationType } = req.query;
 
+    consultationType = consultationType ?? consultationTypeEnum.normal;
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
     const skip: number = (page - 1) * limit;
@@ -407,6 +427,7 @@ export const getConsultationList = async (
       {
         $match: {
           userId: new mongoose.Types.ObjectId(res.locals.userId as string),
+          consultationType,
           ...(startDate &&
             endDate && {
               startDateTime: { $gte: startDate },
@@ -470,7 +491,9 @@ export const getAllConsultationList = async (
 ): Promise<any> => {
   try {
     const { fromDate, toDate } = req.query;
+    let { consultationType } = req.query;
 
+    consultationType = consultationType ?? consultationTypeEnum.normal;
     // const limit = +(req.query?.limit ?? 10);
     // const page = +(req.query?.page ?? 1);
     // const skip: number = (page - 1) * limit;
@@ -488,6 +511,7 @@ export const getAllConsultationList = async (
     const consultation = await consultationModel.aggregate([
       {
         $match: {
+          consultationType,
           ...(startDate &&
             endDate && {
               startDateTime: { $gte: startDate },
@@ -582,7 +606,6 @@ export const addServiceRecord = async (
       HTTP_STATUS.CREATED
     );
   } catch (error) {
-    console.log(error);
     return errorResponse(res, 'Internal Server Error');
   }
 };
@@ -984,6 +1007,7 @@ export const updateConsultation = async (
     const checkSlotAvailable = await consultationModel.findOne({
       startDateTime: { $gte: startDate },
       endDateTime: { $lte: endDate },
+      consultationType: existingConsultation.consultationType,
     });
     if (checkSlotAvailable) {
       return errorResponse(
@@ -1016,11 +1040,16 @@ export const getUpcomingConsultationDetails = async (
   res: Response
 ): Promise<any> => {
   try {
+    let { consultationType } = req.query;
+
+    consultationType = consultationType ?? consultationTypeEnum.normal;
+
     const consultation = await consultationModel
       .findOne(
         {
           userId: res.locals.userId,
           startDateTime: { $gte: new Date() },
+          consultationType,
         },
         {
           _id: 1,
@@ -1052,6 +1081,114 @@ export const getUpcomingConsultationDetails = async (
     );
   } catch (error) {
     console.log('🚀 ~ error:', error);
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const createTravel = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { isValid, message, value } = validation<ITravel>(
+      req.body,
+      travelBookingValidationSchema
+    );
+    console.log('🚀 ~ req.body:', req.body);
+    if (!isValid) {
+      return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const travelServiceDate = await serviceModel.findOne({
+      slug: 'travel',
+    });
+    if (!travelServiceDate) {
+      return errorResponse(
+        res,
+        'Travel service not found.',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    const amount = travelServiceDate.discountedAmount ?? 0;
+    const razorpayOrder = await razorpayPayment(amount, {
+      isTravelBooking: true,
+    });
+
+    const image = await uploadFile(req.file, UploadImageModuleEnum.TRAVEL, '');
+    if (!image.isValid) {
+      return errorResponse(
+        res,
+        'Error uploading image',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    value.vaccinationRecord = image.fileName;
+
+    value.userId = res.locals.userId;
+    value.providerOrderId = razorpayOrder.id;
+
+    await travelModel.create(value);
+
+    return successResponse(
+      res,
+      'Travel created successfully',
+      {
+        providerOrderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+      },
+      HTTP_STATUS.CREATED
+    );
+  } catch (error) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const getTravelList = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { petId, travelType } = req.query;
+
+    const limit = +(req.query?.limit ?? 10);
+    const page = +(req.query?.page ?? 1);
+    const skip: number = (page - 1) * limit;
+
+    const [travel] = await travelModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(res.locals.userId as string),
+          ...(petId && {
+            petId: new mongoose.Types.ObjectId(petId as string),
+          }),
+          ...(travelType && { travelType }),
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
+          totalCount: [{ $count: 'total' }],
+        },
+      },
+      {
+        $addFields: {
+          totalCount: {
+            $ifNull: [{ $first: '$totalCount.total' }, 0],
+          },
+        },
+      },
+    ]);
+
+    return successResponse(
+      res,
+      'Travel list get successfully',
+      travel,
+      HTTP_STATUS.OK
+    );
+  } catch (error) {
     return errorResponse(res, 'Internal Server Error');
   }
 };

@@ -6,7 +6,10 @@ import {
   getConsultationList,
   getInquiryList,
   getServiceRecordList,
+  getTravelDetails,
+  getTravelList,
   updateServiceRecordData,
+  updateTravelCertificate,
 } from '../../controllers/admin/booking.controller';
 
 const router = Router();
@@ -105,6 +108,11 @@ router.get('/list', getBookingList);
  *           type: string
  *       - in: query
  *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: consultationType
  *         required: false
  *         schema:
  *           type: string
@@ -292,5 +300,119 @@ router.get('/service-record-list', getServiceRecordList);
  *         description: Internal Server Error
  */
 router.get('/booking-details/:id', getBookingDetails);
+
+/**
+ * @swagger
+ * /api/admin/booking/travel-list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get travel list
+ *     tags: [ Admin-Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: petId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: travelType
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [Domestic, International]
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Travel retrieved successfully
+ *       404:
+ *         description: Travel not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/travel-list', getTravelList);
+
+/**
+ * @swagger
+ * /api/admin/booking/travel-details/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get Travel details
+ *     tags: [ Admin-Booking ]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Travel retrieved successfully
+ *       404:
+ *         description: Travel not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/travel-details/:id', getTravelDetails);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UpdateTravelCertificate:
+ *       type: object
+ *       required:
+ *         - _id
+ *         - travelCertificate
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: The ID that refers to the travel booking.
+ *           example: "6788a3b991358b4ffc45d0a7"
+ *         travelCertificate:
+ *           type: string
+ *           format: binary
+ *           description: The image file for the pet (e.g., JPG, PNG).
+ *
+ * /api/admin/booking/update-travel-certificate:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Update a travel Record
+ *     tags: [ Admin-Booking ]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTravelCertificate'
+ *     responses:
+ *       200:
+ *         description: Travel certificate updated successfully
+ *       400:
+ *         description: Invalid input data
+ *       500:
+ *         description: Internal Server Error
+ */
+router.patch(
+  '/update-travel-certificate',
+  multer({ storage: multer.memoryStorage() }).single('travelCertificate'),
+  updateTravelCertificate
+);
 
 export default router;

@@ -5,12 +5,14 @@ import {
   createBooking,
   createConsultation,
   createInquiry,
+  createTravel,
   getAllConsultationList,
   getBookingDetails,
   getBookingList,
   getConsultationList,
   getServiceRecordDetails,
   getServiceRecordList,
+  getTravelList,
   getUpcomingConsultationDetails,
   updateConsultation,
   updateServiceRecord,
@@ -200,6 +202,7 @@ router.post('/create-inquiry', createInquiry);
  *         - startDateTime
  *         - endDateTime
  *         - appointmentReason
+ *         - consultationType
  *       properties:
  *         petId:
  *           type: string
@@ -219,6 +222,10 @@ router.post('/create-inquiry', createInquiry);
  *           type: string
  *           description: The reason for the appointment.
  *           example: "For new grooming session"
+ *         consultationType:
+ *           type: string
+ *           description: The type of the consultation
+ *           example: "Normal"
  *
  * /api/web/booking/create-consultation:
  *   post:
@@ -271,6 +278,11 @@ router.post('/create-consultation', userAuth, createConsultation);
  *         required: false
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: consultationType
+ *         required: false
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Consultation retrieved successfully
@@ -297,6 +309,11 @@ router.get('/consultation-list', userAuth, getConsultationList);
  *           type: string
  *       - in: query
  *         name: toDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: consultationType
  *         required: false
  *         schema:
  *           type: string
@@ -573,6 +590,12 @@ router.patch('/update-consultation', userAuth, updateConsultation);
  *       - bearerAuth: []
  *     summary: Get upcoming consultation details
  *     tags: [ Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: consultationType
+ *         required: false
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Upcoming consultation retrieved successfully
@@ -586,5 +609,113 @@ router.get(
   userAuth,
   getUpcomingConsultationDetails
 );
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Travel:
+ *       type: object
+ *       required:
+ *         - petId
+ *         - travelType
+ *         - travelDate
+ *         - vaccinationRecord
+ *         - isFitToTravelCertificate
+ *         - isHealthCertificate
+ *       properties:
+ *         petId:
+ *           type: string
+ *           description: The pet ID that refers to the service.
+ *           example: "6788a3b991358b4ffc45d0a7"
+ *         travelType:
+ *           type: string
+ *           enum: [Domestic, International]
+ *           description: The travel type.
+ *         travelDate:
+ *           type: string
+ *           format: date
+ *           description: The travel date.
+ *           example: "2025-01-21"
+ *         vaccinationRecord:
+ *           type: string
+ *           format: binary
+ *         isFitToTravelCertificate:
+ *           type: boolean
+ *         isHealthCertificate:
+ *           type: boolean
+ *         isBloodTiterTest:
+ *           type: boolean
+ *         isNoObjectionCertificate:
+ *           type: boolean
+ *         requiredCertificates:
+ *           type: string
+ *
+ * /api/web/booking/travel:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Create a travel data
+ *     tags: [ Booking ]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/Travel'
+ *     responses:
+ *       201:
+ *         description: Travel created successfully
+ *       400:
+ *         description: Invalid input data
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post(
+  '/travel',
+  userAuth,
+  multer({ storage: multer.memoryStorage() }).single('vaccinationRecord'),
+  createTravel
+);
+
+/**
+ * @swagger
+ * /api/web/booking/travel-list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get tavel list
+ *     tags: [ Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: petId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: travelType
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [Domestic, International]
+ *     responses:
+ *       200:
+ *         description: Travel retrieved successfully
+ *       404:
+ *         description: Travel not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/travel-list', userAuth, getTravelList);
 
 export default router;

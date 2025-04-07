@@ -1,4 +1,9 @@
-import { serviceConsultationPriceObj } from '../constants';
+import e from 'cors';
+import {
+  serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationPriceObj,
+} from '../constants';
+import { consultationTypeEnum } from '../enums';
 import { serviceModel } from '../models/service';
 import { serviceConfigModel } from '../models/serviceConfig';
 
@@ -9,9 +14,21 @@ export const createDefaultService = async () => {
   });
 
   if (checkConfig) {
-    const { amount, discountedAmount } = checkConfig.metaData;
-    serviceConsultationPriceObj.amount = amount;
-    serviceConsultationPriceObj.discountedAmount = discountedAmount;
+    const metaData = checkConfig.metaData;
+
+    if (metaData?.[consultationTypeEnum.normal]) {
+      const { amount, discountedAmount } =
+        metaData[consultationTypeEnum.normal];
+      serviceConsultationPriceObj.amount = amount;
+      serviceConsultationPriceObj.discountedAmount = discountedAmount;
+    }
+
+    if (metaData?.[consultationTypeEnum.euthanasia]) {
+      const { amount, discountedAmount } =
+        metaData[consultationTypeEnum.euthanasia];
+      serviceConsultationEuthanasiaPriceObj.amount = amount;
+      serviceConsultationEuthanasiaPriceObj.discountedAmount = discountedAmount;
+    }
   }
 
   if (checkService) {
@@ -39,8 +56,10 @@ export const createDefaultService = async () => {
     },
     {
       name: 'Travel Certificate',
-      slug: 'travel-certificate',
+      slug: 'travel',
       serviceType: 'Online',
+      amount: 120,
+      discountedAmount: 20,
     },
     {
       name: 'Book Surgery',
@@ -58,10 +77,14 @@ export const createDefaultService = async () => {
     },
   ];
 
+  const consultationMetaData: any = {};
+  Object.keys(consultationTypeEnum).forEach(key => {
+    consultationMetaData[key] = { ...serviceConsultationPriceObj };
+  });
   const configData = [
     {
       name: 'CONSULTATION',
-      metaData: { ...serviceConsultationPriceObj },
+      metaData: consultationMetaData,
     },
   ];
 

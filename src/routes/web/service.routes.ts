@@ -96,6 +96,12 @@ router.get('/item-details/:id', getServiceItemDetails);
  *   get:
  *     summary: Get service consultation price
  *     tags: [ Service ]
+ *     parameters:
+ *       - in: query
+ *         name: consultationType
+ *         required: false
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Service price retrieved successfully
