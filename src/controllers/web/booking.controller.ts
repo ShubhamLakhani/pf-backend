@@ -582,6 +582,7 @@ export const addServiceRecord = async (
       HTTP_STATUS.CREATED
     );
   } catch (error) {
+    console.log(error);
     return errorResponse(res, 'Internal Server Error');
   }
 };
