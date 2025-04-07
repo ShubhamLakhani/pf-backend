@@ -274,6 +274,7 @@ export const updateServiceItem = async (
     if (updateObj.name) {
       updateObj.slug = toSlug(updateObj.name);
       const checkServiceItem = await serviceItemsModel.findOne({
+        _id: { $ne: _id },
         slug: updateObj.slug,
       });
       if (checkServiceItem) {
