@@ -1,12 +1,14 @@
 import mongoose, { Types } from 'mongoose';
 import { BookingPaymentStatusEnum, TravelTypeEnum } from '../enums';
 import { IMoongo } from '../utils/common.interface';
+import { required } from 'joi';
 
 // Define the Travel interface
 export interface ITravel extends IMoongo {
   petId: Types.ObjectId;
   travelType: TravelTypeEnum;
   travelDate: Date;
+  microchipNumber?: string | null;
   vaccinationRecord: string;
   isFitToTravelCertificate: boolean;
   isHealthCertificate: boolean;
@@ -37,6 +39,10 @@ const TravelSchema = new mongoose.Schema(
     travelDate: {
       type: Date,
       required: true,
+    },
+    microchipNumber: {
+      type: String,
+      default: null,
     },
     vaccinationRecord: {
       type: String,

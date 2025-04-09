@@ -94,6 +94,11 @@ export const travelBookingValidationSchema = Joi.object({
     .valid(...Object.values(TravelTypeEnum))
     .required(),
   travelDate: Joi.date().iso().min('now').required(),
+  microchipNumber: Joi.string().min(15).max(15).when('travelType', {
+    is: TravelTypeEnum.international,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
   isFitToTravelCertificate: Joi.boolean().required(),
   isHealthCertificate: Joi.boolean().required(),
   isBloodTiterTest: Joi.boolean().when('travelType', {

@@ -182,7 +182,7 @@ export const getConsultationList = async (
   try {
     const { userId, fromDate, toDate } = req.query;
     let { consultationType } = req.query;
-    consultationType = consultationType ?? consultationTypeEnum.normal;
+    // consultationType = consultationType ?? consultationTypeEnum.normal;
 
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
@@ -198,10 +198,12 @@ export const getConsultationList = async (
       endDate.setHours(23, 59, 59, 999); // Set to the last millisecond of the day
     }
 
-    const [consultation] = await consultationModel.aggregate([
+    const consultation = await consultationModel.aggregate([
       {
         $match: {
-          consultationType,
+          ...(consultationType && {
+            consultationType
+          }),
           ...(userId && {
             userId: new mongoose.Types.ObjectId(userId as string),
           }),
@@ -247,27 +249,28 @@ export const getConsultationList = async (
           userId: 1,
           paymentStatus: 1,
           providerOrderId: 1,
+          consultationType: 1,
         },
       },
-      {
-        $facet: {
-          data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
-          totalCount: [{ $count: 'total' }],
-        },
-      },
-      {
-        $addFields: {
-          totalCount: {
-            $ifNull: [{ $first: '$totalCount.total' }, 0],
-          },
-        },
-      },
+      // {
+      //   $facet: {
+      //     data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
+      //     totalCount: [{ $count: 'total' }],
+      //   },
+      // },
+      // {
+      //   $addFields: {
+      //     totalCount: {
+      //       $ifNull: [{ $first: '$totalCount.total' }, 0],
+      //     },
+      //   },
+      // },
     ]);
 
     return successResponse(
       res,
       'Consultation list get successfully',
-      consultation,
+      {data: consultation},
       HTTP_STATUS.OK
     );
   } catch (error) {
