@@ -1066,10 +1066,11 @@ export const getUpcomingConsultationDetails = async (
       .sort({ startDateTime: -1 });
 
     if (!consultation) {
-      return errorResponse(
+      return successResponse(
         res,
-        'Consultation not found.',
-        HTTP_STATUS.NOT_FOUND
+        'Upcoming consultation details get successfully',
+        {},
+        HTTP_STATUS.OK
       );
     }
 
