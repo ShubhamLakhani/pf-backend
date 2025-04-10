@@ -133,6 +133,15 @@ export const getFrequentlyBookedItemList = async (
         },
       },
       {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          as: 'service',
+        },
+      },
+      {$addFields: {serviceNameSlug: {$first: '$service.slug'}}},
+      {
         $unset:
           'metaData.productDetail' /* TO-DO: need to update when finalize field */,
       },
