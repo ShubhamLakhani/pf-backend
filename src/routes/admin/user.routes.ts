@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  changeUserStatus,
   getAllUserList,
   getUserDetails,
 } from '../../controllers/admin/user.controller';
@@ -60,5 +61,27 @@ router.get('/list', getAllUserList);
  *         description: Internal Server Error
  */
 router.get('/details/:userId', getUserDetails);
+
+/**
+ * @swagger
+ * /api/admin/user/status/{userId}:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: User status update
+ *     tags: [ Admin-User ]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User status updated successfully
+ *       500:
+ *         description: Internal Server Error
+ */
+router.patch('/status/:userId', changeUserStatus);
 
 export default router;

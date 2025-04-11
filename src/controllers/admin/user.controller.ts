@@ -75,3 +75,27 @@ export const getUserDetails = async (
     return errorResponse(res, 'Internal Server Error');
   }
 };
+export const changeUserStatus = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const {userId} = req.params;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
+    }
+
+    await userModel.updateOne({_id: userId}, {$set: {isActive: !user.isActive}});
+    
+    return successResponse(
+      res,
+      'User status updated successfully',
+      {
+        userId: user._id,
+        isActive: !user.isActive,
+      },
+      HTTP_STATUS.OK
+    );
+  } catch (err) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
