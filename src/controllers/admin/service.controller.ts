@@ -6,6 +6,7 @@ import {
   serviceConsultationPriceObj,
 } from '../../constants/common.constants';
 import { consultationTypeEnum, UploadImageModuleEnum } from '../../enums';
+import { generateUniqueSlug } from '../../helper/common.helper';
 import { toSlug } from '../../helper/common.helper';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
 import {
@@ -44,17 +45,19 @@ export const createServiceItem = async (
       return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
     }
 
-    value.slug = toSlug(value.name);
-    const checkServiceItem = await serviceItemsModel.findOne({
-      slug: value.slug,
-    });
-    if (checkServiceItem) {
-      return errorResponse(
-        res,
-        'Service item already exists.',
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
+    value.slug = await generateUniqueSlug(value.name);
+
+    // value.slug = toSlug(value.name);
+    // const checkServiceItem = await serviceItemsModel.findOne({
+    //   slug: value.slug,
+    // });
+    // if (checkServiceItem) {
+    //   return errorResponse(
+    //     res,
+    //     'Service item already exists.',
+    //     HTTP_STATUS.BAD_REQUEST
+    //   );
+    // }
 
     if (req.file) {
       const image = await uploadFile(
@@ -272,18 +275,19 @@ export const updateServiceItem = async (
     }
 
     if (updateObj.name) {
-      updateObj.slug = toSlug(updateObj.name);
-      const checkServiceItem = await serviceItemsModel.findOne({
-        _id: { $ne: _id },
-        slug: updateObj.slug,
-      });
-      if (checkServiceItem) {
-        return errorResponse(
-          res,
-          'Service item already exists.',
-          HTTP_STATUS.BAD_REQUEST
-        );
-      }
+      updateObj.slug = await generateUniqueSlug(value.name, _id as any);
+      // updateObj.slug = toSlug(updateObj.name);
+      // const checkServiceItem = await serviceItemsModel.findOne({
+      //   _id: { $ne: _id },
+      //   slug: updateObj.slug,
+      // });
+      // if (checkServiceItem) {
+      //   return errorResponse(
+      //     res,
+      //     'Service item already exists.',
+      //     HTTP_STATUS.BAD_REQUEST
+      //   );
+      // }
     }
 
     if (req.file) {

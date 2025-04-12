@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { OtpWithExpiry } from '../utils/common.interface';
+import { serviceItemsModel } from '../models';
 
 export const generateOtp = (): number => randomInt(100000, 1000000);
 
@@ -75,4 +76,25 @@ export const toSlug = (str: string, useUuid: boolean = false): string => {
     .replace(/-+/g, '-'); // Remove consecutive dashes
 
   return useUuid ? `${slug}-${uuidv4()}` : slug;
+};
+
+export const generateUniqueSlug = async (name: string, id = null) => {
+  let slug = toSlug(name);
+  let uniqueSlug = slug;
+
+  const query: Record<string, any> = {};
+  if (id) {
+    query._id = { $ne: id };
+  }
+
+  for (let counter = 1; ; counter++) {
+    query.slug = uniqueSlug;
+
+    const existing = await serviceItemsModel.findOne(query);
+    if (!existing) break;
+
+    uniqueSlug = `${slug}-${counter}`;
+  }
+
+  return uniqueSlug;
 };
