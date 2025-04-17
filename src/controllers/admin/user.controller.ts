@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { HTTP_STATUS } from '../../constants';
 import { userModel } from '../../models';
 import { errorResponse, successResponse } from '../../utils/responseHandler';
+import { deleteRequestModel } from '../../models/deleteRequest';
+import { DeleteRequestStatusEnum } from '../../enums';
 
 export const getAllUserList = async (
   req: Request,
@@ -85,6 +87,9 @@ export const changeUserStatus = async (req: Request, res: Response): Promise<any
     }
 
     await userModel.updateOne({_id: userId}, {$set: {isActive: !user.isActive}});
+    if(user.isActive) {
+      await deleteRequestModel.updateMany({mobileNumber: user.mobileNumber}, {$set: {status: DeleteRequestStatusEnum.accepted}});
+    }
     
     return successResponse(
       res,

@@ -7,6 +7,7 @@ import serviceRoutes from './service.routes';
 import userRoutes from './user.routes';
 import branchRoutes from './branch.routes';
 import breedRoutes from './breed.routes';
+import commonRoutes from './common.routes';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/booking', bookingRoutes);
 router.use('/user', userAuth, userRoutes);
 router.use('/branch', userAuth, branchRoutes);
 router.use('/breed', userAuth, breedRoutes);
+router.use('/', userAuth, commonRoutes);
 
 export default router;
