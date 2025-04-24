@@ -22,7 +22,7 @@ const UserSchema: Schema = new Schema(
     profileImage: { type: String, required: false },
     otp: { type: Number, default: null },
     otpExpiry: { type: Number },
-    isActive: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
   },
   {
     timestamps: true,
