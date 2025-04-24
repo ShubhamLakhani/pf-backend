@@ -13,7 +13,7 @@ export const bookingValidationSchema = Joi.object({
     .required(),
   branchId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .optional(),
+    .optional().allow(null),
   startDateTime: Joi.date().iso().required(),
   endDateTime: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
   appointmentReason: Joi.string().allow(null),
