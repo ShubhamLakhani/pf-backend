@@ -6,11 +6,15 @@ export interface IUser extends IMoongo {
   _id: string;
   name: string;
   mobileNumber: string;
+  alternateMobileNumber: string;
   address: string;
   otp: number;
   otpExpiry: number;
   isActive: boolean;
   profileImage?: string;
+  alternateMobileNumberOtp: number;
+  alternateMobileNumberOtpExpiry: Date;
+  isAlternateMobileNumberVerified: boolean;
 }
 
 // Create the User schema
@@ -23,6 +27,10 @@ const UserSchema: Schema = new Schema(
     otp: { type: Number, default: null },
     otpExpiry: { type: Number },
     isActive: { type: Boolean, default: true },
+    alternateMobileNumber: { type: String, required: false, default: null },
+    alternateMobileNumberOtp: { type: Number, default: null },
+    alternateMobileNumberOtpExpiry: { type: Number },
+    isAlternateMobileNumberVerified: { type: Boolean, default: false },
   },
   {
     timestamps: true,

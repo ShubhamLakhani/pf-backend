@@ -26,9 +26,11 @@ const sendOtp = async (
   const { otp, expiresAt } = generateOtpWithExpiry();
 
   let testOtp = mobileNumber === '9624216260' ? 123456 : otp;
-  
 
-  await userModel.updateOne({ _id: userId }, { otp: testOtp, otpExpiry: expiresAt });
+  await userModel.updateOne(
+    { _id: userId },
+    { otp: testOtp, otpExpiry: expiresAt }
+  );
 
   const isSendOtp = process.env.IS_SEND_OTP === 'true';
   if (isSendOtp) {
@@ -55,7 +57,9 @@ export const signUp = async (req: Request, res: Response): Promise<any> => {
 
     const { mobileNumber, ...rest } = value;
 
-    const existingUser = await userModel.findOne({ mobileNumber });
+    const existingUser = await userModel.findOne({
+      $or: [{ mobileNumber }, { alternateMobileNumber: mobileNumber }],
+    });
     if (existingUser) {
       if (!existingUser.isActive) {
         await userModel.deleteOne({ _id: existingUser._id });
@@ -148,7 +152,18 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
 
     const { mobileNumber } = value;
 
-    const user = await userModel.findOne({ mobileNumber, isActive: true });
+    const user = await userModel.findOne({
+      $or: [
+        { mobileNumber },
+        {
+          $and: [
+            { isAlternateMobileNumberVerified: true },
+            { alternateMobileNumber: mobileNumber },
+          ],
+        },
+      ],
+      isActive: true,
+    });
     if (!user) {
       return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
     }

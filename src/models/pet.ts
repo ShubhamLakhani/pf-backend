@@ -29,7 +29,7 @@ export interface IPet extends IMoongo {
 const PetSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String, required: false, default: null },
     petType: { type: String, enum: PetTypeEnum, required: true },
     breed: { type: String, required: true },
     sex: { type: String, enum: PetSexEnum, required: true },

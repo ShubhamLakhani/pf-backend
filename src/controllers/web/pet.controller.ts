@@ -23,15 +23,17 @@ export const createPet = async (req: Request, res: Response): Promise<any> => {
       return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
     }
 
-    const image = await uploadFile(req.file, UploadImageModuleEnum.PET, '');
-    if (!image.isValid) {
-      return errorResponse(
-        res,
-        'Error uploading image',
-        HTTP_STATUS.BAD_REQUEST
-      );
+    if(req.file){
+      const image = await uploadFile(req.file, UploadImageModuleEnum.PET, '');
+      if (!image.isValid) {
+        return errorResponse(
+          res,
+          'Error uploading image',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+      value.image = image.fileName;
     }
-    value.image = image.fileName;
     value.userId = res.locals.userId;
     value.slug = toSlug(value.name, true);
 

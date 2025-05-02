@@ -7,7 +7,14 @@ import { IUser, serviceModel, userModel } from '../../models';
 import { serviceRecordModel } from '../../models/servicRecord';
 import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { validation } from '../../utils/validate';
-import { userDetailsValidationSchema } from '../../validations';
+import {
+  signInSchema,
+  userDetailsValidationSchema,
+  validateOtpSchema,
+} from '../../validations';
+import { generateOtpWithExpiry } from '../../helper/common.helper';
+import { sendOtpToUser } from '../../helper/otp.helper';
+import { ISignIn, IValidateOtp } from '../../types';
 
 export const getUserDetails = async (
   req: Request,
@@ -233,6 +240,34 @@ export const updateUserDetails = async (
     //     );
     //   }
     // }
+    let verify = false;
+    if (value.alternateMobileNumber) {
+      const existingUser = await userModel.findOne({
+        _id: { $ne: userId },
+        $or: [
+          { mobileNumber: value.alternateMobileNumber },
+          { alternateMobileNumber: value.alternateMobileNumber },
+        ],
+      });
+      if (existingUser) {
+        return errorResponse(
+          res,
+          'User already registered with this number.',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+      const { otp, expiresAt } = generateOtpWithExpiry();
+
+      value.alternateMobileNumberOtp = otp;
+      value.alternateMobileNumberOtpExpiry = expiresAt;
+      value.isAlternateMobileNumberVerified = false;
+
+      const isSendOtp = process.env.IS_SEND_OTP === 'true';
+      if (isSendOtp) {
+        await sendOtpToUser(value.alternateMobileNumber, otp);
+      }
+      verify = true;
+    }
 
     if (req.file) {
       const image = await uploadFile(
@@ -262,10 +297,127 @@ export const updateUserDetails = async (
     return successResponse(
       res,
       'User details updated successfully',
-      data,
+      {
+        verify,
+      },
       HTTP_STATUS.OK
     );
   } catch (error) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { userId } = res.locals;
+    const user = await userModel.findOne({ _id: userId, isActive: true });
+    if (!user) {
+      return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
+    }
+
+    await userModel.updateOne({ _id: userId }, { $set: { isActive: false } });
+
+    return successResponse(
+      res,
+      'User removed successfully',
+      null,
+      HTTP_STATUS.OK
+    );
+  } catch (err) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const validateAlternateMobileNumberOtp = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { isValid, message, value } = validation<IValidateOtp>(
+      req.body,
+      validateOtpSchema
+    );
+    if (!isValid) {
+      return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const { mobileNumber, otp } = value;
+
+    const user = await userModel.findOne({
+      alternateMobileNumber: mobileNumber,
+      alternateMobileNumberOtp: otp,
+      alternateMobileNumberOtpExpiry: { $gte: Date.now() },
+    });
+
+    if (!user) {
+      return errorResponse(res, 'Invalid OTP.', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    await userModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          isAlternateMobileNumberVerified: true,
+        },
+      }
+    );
+
+    return successResponse(
+      res,
+      'User alternate mobile number is validated successfully',
+      null,
+      HTTP_STATUS.OK
+    );
+  } catch (err) {
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const resendOtp = async (req: Request, res: Response): Promise<any> => {
+  try {
+    console.log('in...');
+    
+    const { isValid, message, value } = validation<ISignIn>(
+      req.body,
+      signInSchema
+    );
+    if (!isValid) {
+      return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const { mobileNumber } = value;
+
+    const user = await userModel.findOne({
+      alternateMobileNumber: mobileNumber,
+    });
+    console.log("🚀 ~ resendOtp ~ user:", user)
+    if (!user) {
+      return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const { otp, expiresAt } = generateOtpWithExpiry();
+
+    await userModel.updateOne(
+      { _id: user._id },
+      {
+        alternateMobileNumberOtp: otp,
+        alternateMobileNumberOtpExpiry: expiresAt,
+      }
+    );
+
+    const isSendOtp = process.env.IS_SEND_OTP === 'true';
+    if (isSendOtp) {
+      await sendOtpToUser(mobileNumber, otp);
+    }
+
+    return successResponse(
+      res,
+      'OTP sent successfully',
+      !isSendOtp ? { otp } : null,
+      HTTP_STATUS.OK
+    );
+  } catch (err) {
+    console.log("🚀 ~ resendOtp ~ err:", err)
     return errorResponse(res, 'Internal Server Error');
   }
 };

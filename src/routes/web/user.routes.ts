@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import {
+  deleteUser,
   getNextVaccinationData,
   getUserDetails,
+  resendOtp,
   updateUserDetails,
+  validateAlternateMobileNumberOtp,
 } from '../../controllers/web/user.controller';
 import multer from 'multer';
 
@@ -61,6 +64,9 @@ router.get('/next-vaccination', getNextVaccinationData);
  *           description: The image file for the profile (e.g., JPG, PNG).
  *         mobileNumber:
  *           type: string
+ *           description: mobile number
+ *         alternateMobileNumber:
+ *           type: string
  *         address:
  *           type: string
  *
@@ -87,5 +93,74 @@ router.patch(
   multer({ storage: multer.memoryStorage() }).single('image'),
   updateUserDetails
 );
+
+
+/**
+ * @swagger
+ * /api/web/user/delete:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: User removed
+ *     tags: [ User ]
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       500:
+ *         description: Internal Server Error
+ */
+router.delete('/delete', deleteUser);
+
+/**
+ * @swagger
+ * /api/web/user/validate-alternate-mobile-number-otp:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Validate a alternet mobile number otp
+ *     tags: [ User ]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobileNumber:
+ *                 type: string
+ *               otp:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: User alternate mobile number is validate successfully
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post('/validate-alternate-mobile-number-otp', validateAlternateMobileNumberOtp);
+
+/**
+ * @swagger
+ * /api/web/user/resend-alternate-mobile-number-otp:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: resend alternate mobile number otp
+ *     tags: [ User ]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobileNumber:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: resend alternate mobile number otp successfully
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post('/resend-alternate-mobile-number-otp', resendOtp);
 
 export default router;
