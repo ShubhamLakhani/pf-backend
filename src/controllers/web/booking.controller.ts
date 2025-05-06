@@ -619,6 +619,7 @@ export const getServiceRecordList = async (
 
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
+    const sort = (req.query?.sort ?? 'desc');
     const skip: number = (page - 1) * limit;
 
     const [serviceRecord] = await serviceRecordModel.aggregate([
@@ -659,7 +660,7 @@ export const getServiceRecordList = async (
           as: 'pet',
         },
       },
-      { $sort: { createdAt: -1 } },
+      { $sort: { createdAt: sort === 'asc' ? 1 : -1 } },
       {
         $project: {
           serviceName: {
