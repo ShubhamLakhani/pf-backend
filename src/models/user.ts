@@ -12,6 +12,7 @@ export interface IUser extends IMoongo {
   otpExpiry: number;
   isActive: boolean;
   profileImage?: string;
+  removeAlternateMobileNumber: boolean;
   alternateMobileNumberOtp: number;
   alternateMobileNumberOtpExpiry: Date;
   isAlternateMobileNumberVerified: boolean;

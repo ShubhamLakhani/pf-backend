@@ -9,4 +9,5 @@ export const userDetailsValidationSchema = Joi.object({
   alternateMobileNumber: Joi.string()
     .pattern(/^\+?[1-9]\d{1,14}$/)
     .optional(),
+  removeAlternateMobileNumber: Joi.boolean().optional(),
 });

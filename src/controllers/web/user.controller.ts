@@ -241,7 +241,10 @@ export const updateUserDetails = async (
     //   }
     // }
     let verify = false;
-    if (value.alternateMobileNumber) {
+    if(value.removeAlternateMobileNumber){
+      value.isAlternateMobileNumberVerified = false;
+      value.alternateMobileNumber = ''
+    } else if (value.alternateMobileNumber) {
       const existingUser = await userModel.findOne({
         _id: { $ne: userId },
         $or: [
