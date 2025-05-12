@@ -411,9 +411,19 @@ export const updateService = async (
           await deleteFile(service[key]);
         }
       }
-    } else {
-      delete updateObj.image;
-      delete updateObj.mobileImage;
+    } 
+    // else {
+    //   delete updateObj.image;
+    //   delete updateObj.mobileImage;
+    // }
+
+    if(updateObj.image === '' && service.image) {
+      await deleteFile(service.image);
+      updateObj.image = null;
+    }
+    if(updateObj.mobileImage === '' && service.mobileImage) {
+      await deleteFile(service.mobileImage);
+      updateObj.mobileImage = null;
     }
 
     await serviceModel.updateOne({ _id }, updateObj);

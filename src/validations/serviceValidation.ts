@@ -31,6 +31,7 @@ export const updateServiceSchema = Joi.object({
   amount: Joi.number().optional(),
   discountedAmount: Joi.number().default(0).optional(),
   image: Joi.string().allow('').empty().optional(),
+  mobileImage: Joi.string().allow('').empty().optional(),
   description: Joi.string().optional(),
 });
 
