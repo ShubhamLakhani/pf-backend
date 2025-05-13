@@ -190,7 +190,15 @@ export const validateSignInOtp = async (
     const { mobileNumber, otp } = value;
 
     const user = await userModel.findOne({
-      mobileNumber,
+      $or: [
+        { mobileNumber },
+        {
+          $and: [
+            { isAlternateMobileNumberVerified: true },
+            { alternateMobileNumber: mobileNumber },
+          ],
+        },
+      ],
       otp,
       otpExpiry: { $gte: Date.now() },
     });
