@@ -125,6 +125,9 @@ export const getBookingList = async (
           serviceItemName: {
             $first: '$serviceItems.name',
           },
+          paidAmount: {
+            $first: '$serviceItems.discountedAmount',
+          },
           petName: {
             $first: '$pet.name',
           },

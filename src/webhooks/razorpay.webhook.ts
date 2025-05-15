@@ -1,7 +1,15 @@
 import crypto from 'crypto';
-import { BookingPaymentStatusEnum } from '../enums';
-import { bookingModel, consultationModel } from '../models';
+import { BookingPaymentStatusEnum, consultationTypeEnum } from '../enums';
+import {
+  bookingModel,
+  consultationModel,
+  serviceModel,
+  userModel,
+} from '../models';
 import { travelModel } from '../models/travel';
+import { sendMessage } from '../helper/otp.helper';
+import { whatsappTemplatesName } from '../constants';
+import { formatDateTime } from '../helper/common.helper';
 
 export const razorpayWebhook = async (req: any, res: any) => {
   console.log('Razorpay Webhook Received');
@@ -20,7 +28,7 @@ export const razorpayWebhook = async (req: any, res: any) => {
       const { id, status, notes } = req.body.payload.order.entity;
 
       if (notes.isBooking) {
-        await bookingModel.updateOne(
+        const updatedData = await bookingModel.findOneAndUpdate(
           { providerOrderId: id },
           {
             $set: {
@@ -30,8 +38,27 @@ export const razorpayWebhook = async (req: any, res: any) => {
             },
           }
         );
+        if (updatedData?.userId) {
+          const user = await userModel.findById(updatedData.userId);
+          if (user) {
+            const service = await serviceModel.findById(updatedData.serviceId);
+
+            const slug = service?.slug ?? whatsappTemplatesName.vaccinations;
+
+            const { formattedDate, formattedTime } = formatDateTime(
+              updatedData.startDateTime
+            );
+
+            await sendMessage({
+              mobileNumber: res.locals.user.mobileNumber,
+              templateName: whatsappTemplatesName[slug],
+              dynamicVariables:
+                slug === 'blood-tests?' ? [] : [formattedDate, formattedTime],
+            });
+          }
+        }
       } else if (notes.isConsultationBooking) {
-        await consultationModel.updateOne(
+        const updatedData = await consultationModel.findOneAndUpdate(
           { providerOrderId: id },
           {
             $set: {
@@ -39,10 +66,25 @@ export const razorpayWebhook = async (req: any, res: any) => {
               paymentStatus: BookingPaymentStatusEnum.success,
               providerData: req.body,
             },
-          }
+          },
+          { new: true }
         );
+        if (updatedData?.userId) {
+          const user = await userModel.findById(updatedData.userId);
+          if (user) {
+            const { formattedDate, formattedTime } = formatDateTime(
+              updatedData.startDateTime
+            );
+
+            await sendMessage({
+              mobileNumber: user.mobileNumber,
+              templateName: whatsappTemplatesName[updatedData.consultationType],
+              dynamicVariables: [formattedDate, formattedTime],
+            });
+          }
+        }
       } else if (notes.isTravelBooking) {
-        await travelModel.updateOne(
+        const updatedData = await travelModel.findOneAndUpdate(
           { providerOrderId: id },
           {
             $set: {
@@ -50,8 +92,19 @@ export const razorpayWebhook = async (req: any, res: any) => {
               paymentStatus: BookingPaymentStatusEnum.success,
               providerData: req.body,
             },
-          }
+          },
+          { new: true }
         );
+
+        if (updatedData?.userId) {
+          const user = await userModel.findById(updatedData.userId);
+          if (user) {
+            await sendMessage({
+              mobileNumber: res.locals.user.mobileNumber,
+              templateName: whatsappTemplatesName.Travel,
+            });
+          }
+        }
       }
     }
     return res.status(200).json({ success: true, message: 'Payment Verified' });

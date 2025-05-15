@@ -98,3 +98,15 @@ export const generateUniqueSlug = async (name: string, id = null) => {
 
   return uniqueSlug;
 };
+
+// Utility function to format date and time
+export const formatDateTime = (dateString: Date) => {
+  const date = new Date(dateString);
+  const formattedDate = date.toISOString().split('T')[0];
+  const formattedTime = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+  });
+  return { formattedDate, formattedTime };
+};
