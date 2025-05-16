@@ -11,7 +11,7 @@ export const whatsappTemplatesName:Record<string, string> = {
   Euthanasia: 'euthanasia_appointment_new',
   Normal: 'online_consultation' /* Normal(Consultation) appointment */,
   Travel: 'travel_certificate',
-  vaccinations: 'vaccination_appointment',
+  vaccinations: 'vaccination_appoinment',
   surgery: 'surgery',
   'check-ups': 'health_checkup',
   'hospital-visit': 'hospital_appointment',
@@ -25,7 +25,7 @@ export const whatsappTemplateImage: Record<string, string> = {
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+7.jpeg',
   hospital_appointment:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+5.jpeg',
-  vaccination_appointment:
+  vaccination_appoinment:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+2.jpeg',
   blood_test:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+4.jpeg',

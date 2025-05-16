@@ -56,7 +56,7 @@ export const razorpayWebhook = async (req: any, res: any) => {
               mobileNumber: user.mobileNumber,
               templateName: whatsappTemplatesName[slug],
               dynamicVariables:
-                slug === 'blood-tests?' ? [] : [formattedDate, formattedTime],
+                slug === 'blood-tests' ? [] : [formattedDate, formattedTime],
             });
           }
         }
