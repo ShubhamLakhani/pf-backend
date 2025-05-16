@@ -38,6 +38,7 @@ export const razorpayWebhook = async (req: any, res: any) => {
             },
           }
         );
+        console.log('updatedData', updatedData?.userId);
         if (updatedData?.userId) {
           const user = await userModel.findById(updatedData.userId);
           if (user) {
@@ -49,8 +50,10 @@ export const razorpayWebhook = async (req: any, res: any) => {
               updatedData.startDateTime
             );
 
+            console.log('user', user);
+
             await sendMessage({
-              mobileNumber: res.locals.user.mobileNumber,
+              mobileNumber: user.mobileNumber,
               templateName: whatsappTemplatesName[slug],
               dynamicVariables:
                 slug === 'blood-tests?' ? [] : [formattedDate, formattedTime],
@@ -71,10 +74,13 @@ export const razorpayWebhook = async (req: any, res: any) => {
         );
         if (updatedData?.userId) {
           const user = await userModel.findById(updatedData.userId);
+            console.log('user', user);
+
           if (user) {
             const { formattedDate, formattedTime } = formatDateTime(
               updatedData.startDateTime
             );
+
 
             await sendMessage({
               mobileNumber: user.mobileNumber,
@@ -98,9 +104,10 @@ export const razorpayWebhook = async (req: any, res: any) => {
 
         if (updatedData?.userId) {
           const user = await userModel.findById(updatedData.userId);
+          console.log('user', user);
           if (user) {
             await sendMessage({
-              mobileNumber: res.locals.user.mobileNumber,
+              mobileNumber: user.mobileNumber,
               templateName: whatsappTemplatesName.Travel,
             });
           }

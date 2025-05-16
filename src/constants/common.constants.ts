@@ -25,7 +25,7 @@ export const whatsappTemplateImage: Record<string, string> = {
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+7.jpeg',
   hospital_appointment:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+5.jpeg',
-  vacination:
+  vaccination_appointment:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+2.jpeg',
   blood_test:
     'https://dev-pet-first.s3.ap-south-1.amazonaws.com/assets/whatsapp-template-image/WA+4.jpeg',
