@@ -18,6 +18,7 @@ import {
   vaccinationUpdateLastRecordValidationSchema,
 } from '../../validations';
 import { ITravel, travelModel } from '../../models/travel';
+import { FileType, generateExportFile } from '../../utils/exportFile';
 
 export const getBookingList = async (
   req: Request,
@@ -32,6 +33,8 @@ export const getBookingList = async (
       toDate,
       branchId,
       petId,
+      isExport,
+      fileType
     } = req.query;
 
     const limit = +(req.query?.limit ?? 10);
@@ -47,6 +50,85 @@ export const getBookingList = async (
       endDate = new Date(toDate as string);
       endDate.setHours(23, 59, 59, 999); // Set to the last millisecond of the day
     }
+
+    console.log({ isExport })
+
+    const paginationStage = isExport === 'true'
+      ? []
+      : [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])]; 
+
+      const project = isExport === 'true' ? {
+          serviceName: {
+            $first: '$service.name',
+          },
+          serviceType: {
+            $first: '$service.serviceType',
+          },
+          serviceItemName: {
+            $first: '$serviceItems.name',
+          },
+          paidAmount: {
+            $first: '$serviceItems.discountedAmount',
+          },
+          petName: {
+            $first: '$pet.name',
+          },
+          petType: {
+            $first: '$pet.petType',
+          },
+          userName: {
+            $first: '$user.name',
+          },
+          startDateTime: 1,
+          endDateTime: 1,
+          appointmentReason: 1,
+          // userId: 1,
+          bookingStatus: 1,
+          bookingPaymentStatus: 1,
+          timeSlotLabel: 1,
+          providerOrderId: 1,
+          // petId: 1,
+          branchName: {
+            $first: '$branches.name',
+          },
+          // branchId: 1,
+          _id: 0
+        } : {
+          serviceName: {
+            $first: '$service.name',
+          },
+          serviceType: {
+            $first: '$service.serviceType',
+          },
+          serviceItemName: {
+            $first: '$serviceItems.name',
+          },
+          paidAmount: {
+            $first: '$serviceItems.discountedAmount',
+          },
+          petName: {
+            $first: '$pet.name',
+          },
+          petType: {
+            $first: '$pet.petType',
+          },
+          userName: {
+            $first: '$user.name',
+          },
+          startDateTime: 1,
+          endDateTime: 1,
+          appointmentReason: 1,
+          userId: 1,
+          bookingStatus: 1,
+          bookingPaymentStatus: 1,
+          timeSlotLabel: 1,
+          providerOrderId: 1,
+          petId: 1,
+          branchName: {
+            $first: '$branches.name',
+          },
+          branchId: 1,
+        }
 
     const [booking] = await bookingModel.aggregate([
       {
@@ -115,46 +197,11 @@ export const getBookingList = async (
       },
       { $sort: { createdAt: -1 } },
       {
-        $project: {
-          serviceName: {
-            $first: '$service.name',
-          },
-          serviceType: {
-            $first: '$service.serviceType',
-          },
-          serviceItemName: {
-            $first: '$serviceItems.name',
-          },
-          paidAmount: {
-            $first: '$serviceItems.discountedAmount',
-          },
-          petName: {
-            $first: '$pet.name',
-          },
-          petType: {
-            $first: '$pet.petType',
-          },
-          userName: {
-            $first: '$user.name',
-          },
-          startDateTime: 1,
-          endDateTime: 1,
-          appointmentReason: 1,
-          userId: 1,
-          bookingStatus: 1,
-          bookingPaymentStatus: 1,
-          timeSlotLabel: 1,
-          providerOrderId: 1,
-          petId: 1,
-          branchName: {
-            $first: '$branches.name',
-          },
-          branchId: 1,
-        },
+        $project: project,
       },
       {
         $facet: {
-          data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
+          data: [...paginationStage],  // Use dynamic pagination stage
           totalCount: [{ $count: 'total' }],
         },
       },
@@ -166,6 +213,38 @@ export const getBookingList = async (
         },
       },
     ]);
+    
+    let exportedData;
+    
+
+    if(isExport === 'true') {
+      interface BookingItem {
+        [key: string]: any;
+        startDateTime: Date | string;
+        endDateTime: Date | string;
+      }
+
+      booking.data = (booking.data as BookingItem[]).map((item: BookingItem): BookingItem => {
+        // Helper function to format date as dd-mm-yyyy
+        const formatDate = (date: Date | string): string => {
+          const d = new Date(date);
+          const day = d.getDate().toString().padStart(2, '0');
+          const month = (d.getMonth() + 1).toString().padStart(2, '0');
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
+        };
+
+        return {
+          ...item,
+          startDateTime: formatDate(item.startDateTime), // Format the startDateTime
+          endDateTime: formatDate(item.endDateTime),     // Format the endDateTime
+        };
+      });
+
+      exportedData = await generateExportFile(booking.data, fileType as FileType, res);
+      return
+    }
+
 
     return successResponse(
       res,
