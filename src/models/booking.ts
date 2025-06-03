@@ -21,6 +21,7 @@ export interface IBooking extends IMoongo {
   providerOrderStatus?: string;
   providerData?: any;
   timeSlotLabel?: string;
+  amount: number;
 }
 
 // Create the Booking schema
@@ -59,6 +60,7 @@ const BookingSchema: Schema = new Schema(
     startDateTime: { type: Date, required: true },
     endDateTime: { type: Date, required: true },
     appointmentReason: { type: String, default: null },
+    amount: { type: Number, required: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       require: true,

@@ -21,6 +21,7 @@ export interface ITravel extends IMoongo {
   providerOrderStatus?: string;
   providerData?: any;
   travelCertificate?: string | null;
+  amount: number;
 }
 
 // Create the Travel schema
@@ -85,6 +86,7 @@ const TravelSchema = new mongoose.Schema(
     providerOrderId: { type: String, default: null },
     providerOrderStatus: { type: String, default: null },
     providerData: { type: Object, default: null },
+    amount: { type: Number, required: true },
   },
   { timestamps: true }
 );

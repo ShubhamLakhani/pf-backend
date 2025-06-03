@@ -3,13 +3,16 @@ import multer from 'multer';
 import {
   getBookingDetails,
   getBookingList,
+  exportBookingReport,
   getConsultationList,
+  exportConsultationList,
   getInquiryList,
   getServiceRecordList,
   getTravelDetails,
   getTravelList,
   updateServiceRecordData,
   updateTravelCertificate,
+  exportTravelList,
 } from '../../controllers/admin/booking.controller';
 
 const router = Router();
@@ -79,6 +82,70 @@ router.get('/list', getBookingList);
 
 /**
  * @swagger
+ * /api/admin/booking/list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get booking list
+ *     tags: [ Admin-Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: serviceId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: serviceItemId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fromDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: toDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: branchId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: petId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking retrieved successfully
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/export', exportBookingReport);
+
+/**
+ * @swagger
  * /api/admin/booking/consultation-list:
  *   get:
  *     security:
@@ -125,6 +192,55 @@ router.get('/list', getBookingList);
  *         description: Internal Server Error
  */
 router.get('/consultation-list', getConsultationList);
+
+/**
+ * @swagger
+ * /api/admin/booking/consultation-list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get consultation list
+ *     tags: [ Admin-Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fromDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: toDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: consultationType
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Consultation retrieved successfully
+ *       404:
+ *         description: Consultation not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/export-consultation-list', exportConsultationList);
 
 /**
  * @swagger
@@ -345,6 +461,51 @@ router.get('/booking-details/:id', getBookingDetails);
  *         description: Internal Server Error
  */
 router.get('/travel-list', getTravelList);
+
+/**
+ * @swagger
+ * /api/admin/booking/travel-list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get travel list
+ *     tags: [ Admin-Booking ]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: petId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: travelType
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [Domestic, International]
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Travel retrieved successfully
+ *       404:
+ *         description: Travel not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/export-travel-list', exportTravelList);
 
 /**
  * @swagger

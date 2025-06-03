@@ -4,6 +4,8 @@ import { connectDB } from './config/db';
 import swaggerJsdoc from './config/swagger';
 import routes from './routes';
 import dotenv from 'dotenv';
+import { bookingModel } from './models';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
@@ -12,8 +14,53 @@ const startApp = async () => {
   await connectDB();
   // Create default data
   import('./seeders');
+testmodel()
 };
 startApp();
+
+
+async function testmodel() {
+ const dsy = await bookingModel.aggregate(
+  [
+  // {
+  //   $match: {
+  //     _id: new mongoose.Types.ObjectId("683599e983d17d83b45c37f7")
+  //   }
+  // },
+  {
+    $lookup: {
+      from: "serviceitems",
+      localField: "serviceItemId",
+      foreignField: "_id",
+      as: "serviceItemData"
+    }
+  },
+  {
+    $set: {
+      amount: {
+        $ifNull: [
+          { $getField: { field: "discountedAmount", input: { $first: "$serviceItemData" } } },
+          0
+        ]
+      }
+    }
+  },
+  {
+    $unset: "serviceItemData"
+  },
+  {
+    $merge: {
+      into: "bookings",
+      whenMatched: "merge",
+      whenNotMatched: "discard"
+    }
+  }
+]
+  )
+  console.log("🚀 ~ testmodel ~ dsy:", dsy)
+  console.log('updst...');
+  
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;

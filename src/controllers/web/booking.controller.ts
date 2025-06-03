@@ -138,6 +138,7 @@ export const createBooking = async (
 
     value.serviceRecordId = serviceRecord._id;
     value.providerOrderId = razorpayOrder.id;
+    value.amount = amount;
 
     await bookingModel.create(value);
 
@@ -382,6 +383,7 @@ export const createConsultation = async (
     });
     value.userId = res.locals.userId;
     value.providerOrderId = razorpayOrder.id;
+    value.amount = amount;
 
     await consultationModel.create(value);
 
@@ -1129,7 +1131,8 @@ export const createTravel = async (
 
     value.userId = res.locals.userId;
     value.providerOrderId = razorpayOrder.id;
-
+    value.amount = amount;
+    
     await travelModel.create(value);
 
     return successResponse(

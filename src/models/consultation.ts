@@ -20,6 +20,7 @@ export interface IConsultation extends IMoongo {
   providerData?: any;
   consultationStatus?: ConsultationStatusEnum;
   consultationType: consultationTypeEnum;
+  amount: number;
 }
 
 // Create the Consultation schema
@@ -43,6 +44,7 @@ const ConsultationSchema: Schema = new Schema(
       enum: BookingPaymentStatusEnum,
       default: BookingPaymentStatusEnum.pending,
     },
+    amount: { type: Number, required: true },
     providerOrderId: { type: String, default: null },
     providerOrderStatus: { type: String, default: null },
     providerData: { type: Object, default: null },
