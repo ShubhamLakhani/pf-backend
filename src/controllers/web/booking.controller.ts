@@ -584,7 +584,7 @@ export const addServiceRecord = async (
     }
 
     const image = await uploadFile(
-      req.file,
+      req.file!,
       UploadImageModuleEnum.VACCINATION_RECORD,
       ''
     );
@@ -1119,7 +1119,7 @@ export const createTravel = async (
       isTravelBooking: true,
     });
 
-    const image = await uploadFile(req.file, UploadImageModuleEnum.TRAVEL, '');
+    const image = await uploadFile(req.file!, UploadImageModuleEnum.TRAVEL, '');
     if (!image.isValid) {
       return errorResponse(
         res,

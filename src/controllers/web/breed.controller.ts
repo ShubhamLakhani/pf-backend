@@ -17,7 +17,7 @@ export const getBreedList = async (
           breed_name: { $regex: new RegExp(filter as string, 'i') },
         }),
       })
-      .sort({ createdAt: -1 });
+      .sort({ breed_name: 1 });
 
     if (!breeds.length) {
       return successResponse(res, 'Pets get successfully', [], HTTP_STATUS.OK);
