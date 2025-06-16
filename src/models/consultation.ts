@@ -4,6 +4,7 @@ import {
   BookingPaymentStatusEnum,
   ConsultationStatusEnum,
   consultationTypeEnum,
+  euthanasiaTypeEnum,
 } from '../enums';
 
 // Define the Consultation interface
@@ -31,8 +32,8 @@ const ConsultationSchema: Schema = new Schema(
       require: true,
       ref: 'pets',
     },
-    startDateTime: { type: Date, required: true },
-    endDateTime: { type: Date, required: true },
+    startDateTime: { type: Date, required: false },
+    endDateTime: { type: Date, required: false },
     appointmentReason: { type: String, default: null },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -57,6 +58,11 @@ const ConsultationSchema: Schema = new Schema(
       type: String,
       enum: consultationTypeEnum,
       default: consultationTypeEnum.normal,
+    },
+    euthanasiaType: {
+      type: String,
+      enum: euthanasiaTypeEnum,
+      default: euthanasiaTypeEnum.online,
     },
   },
   {

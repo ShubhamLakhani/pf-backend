@@ -29,3 +29,8 @@ export enum consultationTypeEnum {
   normal = 'Normal',
   euthanasia = 'Euthanasia',
 }
+
+export enum euthanasiaTypeEnum {
+  online = 'Online',
+  home = 'Home',
+}

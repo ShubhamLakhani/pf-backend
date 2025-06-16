@@ -6,8 +6,10 @@ import {
   serviceConsultationPriceObj,
 } from '../../constants';
 import {
+  BookingPaymentStatusEnum,
   ConsultationStatusEnum,
   consultationTypeEnum,
+  euthanasiaTypeEnum,
   UploadImageModuleEnum,
 } from '../../enums';
 import { razorpayPayment } from '../../helper/razorpay.helper';
@@ -183,6 +185,7 @@ export const getBookingList = async (
       {
         $match: {
           userId: new mongoose.Types.ObjectId(res.locals.userId as string),
+          bookingPaymentStatus: BookingPaymentStatusEnum.success,
           ...(serviceId && {
             serviceId: new mongoose.Types.ObjectId(serviceId as string),
           }),
@@ -330,50 +333,56 @@ export const createConsultation = async (
       return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
     }
 
-    const checkBooking = isValidTimeRangeForOnlineService(
-      value.startDateTime,
-      value.endDateTime
-    );
-
-    if (!checkBooking) {
-      return errorResponse(res, 'Booking time invalid.', HTTP_STATUS.NOT_FOUND);
-    }
-
-    const currentDate = new Date();
-
-    // Check if the user has an active consultation (end date should be in the future)
-    const existingConsultation = await consultationModel.findOne({
-      userId: res.locals.userId,
-      endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
-      consultationType: value.consultationType,
-    });
-    if (existingConsultation) {
-      return errorResponse(
-        res,
-        'You already have an active consultation.',
-        HTTP_STATUS.BAD_REQUEST
+    if (value.startDateTime && value.endDateTime) {
+      const checkBooking = isValidTimeRangeForOnlineService(
+        value.startDateTime,
+        value.endDateTime
       );
+
+      if (!checkBooking) {
+        return errorResponse(
+          res,
+          'Booking time invalid.',
+          HTTP_STATUS.NOT_FOUND
+        );
+      }
+
+      const currentDate = new Date();
+
+      // Check if the user has an active consultation (end date should be in the future)
+      const existingConsultation = await consultationModel.findOne({
+        userId: res.locals.userId,
+        endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
+        consultationType: value.consultationType,
+      });
+      if (existingConsultation) {
+        return errorResponse(
+          res,
+          'You already have an active consultation.',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+
+      const startDate = new Date(value.startDateTime);
+      startDate.setSeconds(0, 0); // Reset seconds and milliseconds
+
+      const endDate = new Date(value.endDateTime);
+      endDate.setSeconds(59, 0); // Reset seconds and milliseconds
+
+      const checkSlotAvailable = await consultationModel.findOne({
+        startDateTime: { $gte: startDate },
+        endDateTime: { $lte: endDate },
+        consultationType: value.consultationType,
+      });
+      if (checkSlotAvailable) {
+        return errorResponse(
+          res,
+          'Slot already booked.',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
     }
-
-    const startDate = new Date(value.startDateTime);
-    startDate.setSeconds(0, 0); // Reset seconds and milliseconds
-
-    const endDate = new Date(value.endDateTime);
-    endDate.setSeconds(59, 0); // Reset seconds and milliseconds
-
-    const checkSlotAvailable = await consultationModel.findOne({
-      startDateTime: { $gte: startDate },
-      endDateTime: { $lte: endDate },
-      consultationType: value.consultationType,
-    });
-    if (checkSlotAvailable) {
-      return errorResponse(
-        res,
-        'Slot already booked.',
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
+  
     const amount =
       value.consultationType === consultationTypeEnum.euthanasia
         ? serviceConsultationEuthanasiaPriceObj.discountedAmount
@@ -1053,6 +1062,9 @@ export const getUpcomingConsultationDetails = async (
           userId: res.locals.userId,
           startDateTime: { $gte: new Date() },
           consultationType,
+          euthanasiaType: { $ne: euthanasiaTypeEnum.home },
+          paymentStatus: BookingPaymentStatusEnum.success,
+          consultationStatus: ConsultationStatusEnum.pending,
         },
         {
           _id: 1,
@@ -1066,7 +1078,7 @@ export const getUpcomingConsultationDetails = async (
           petId: 1,
         }
       )
-      .sort({ startDateTime: -1 });
+      .sort({ startDateTime: 1 });
 
     if (!consultation) {
       return successResponse(

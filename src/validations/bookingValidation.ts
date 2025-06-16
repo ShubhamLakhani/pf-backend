@@ -1,5 +1,9 @@
 import Joi from 'joi';
-import { consultationTypeEnum, TravelTypeEnum } from '../enums';
+import {
+  consultationTypeEnum,
+  euthanasiaTypeEnum,
+  TravelTypeEnum,
+} from '../enums';
 
 export const bookingValidationSchema = Joi.object({
   serviceItemId: Joi.string()
@@ -13,7 +17,8 @@ export const bookingValidationSchema = Joi.object({
     .required(),
   branchId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .optional().allow(null),
+    .optional()
+    .allow(null),
   startDateTime: Joi.date().iso().required(),
   endDateTime: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
   appointmentReason: Joi.string().allow(null),
@@ -24,12 +29,35 @@ export const consultationBookingValidationSchema = Joi.object({
   petId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required(),
-  startDateTime: Joi.date().iso().required(),
-  endDateTime: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
+  startDateTime: Joi.when('consultationType', {
+    is: 'Euthanasia',
+    then: Joi.when('euthanasiaType', {
+      is: 'online',
+      then: Joi.date().iso().required(),
+      otherwise: Joi.date().iso().optional(),
+    }),
+    otherwise: Joi.date().iso().required(),
+  }),
+  endDateTime: Joi.when('consultationType', {
+    is: 'Euthanasia',
+    then: Joi.when('euthanasiaType', {
+      is: 'online',
+      then: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
+      otherwise: Joi.date().iso().greater(Joi.ref('startDateTime')).optional(),
+    }),
+    otherwise: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
+  }),
   appointmentReason: Joi.string().allow(null),
   consultationType: Joi.string()
     .valid(...Object.values(consultationTypeEnum))
     .required(),
+  euthanasiaType: Joi.when('consultationType', {
+    is: consultationTypeEnum.euthanasia,
+    then: Joi.string()
+      .valid(...Object.values(euthanasiaTypeEnum))
+      .required(),
+    otherwise: Joi.forbidden(),
+  }),
 });
 
 export const vaccinationLastRecordValidationSchema = Joi.object({
