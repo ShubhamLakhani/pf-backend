@@ -575,6 +575,7 @@ export const addServiceRecord = async (
       req.body,
       vaccinationLastRecordValidationSchema
     );
+
     if (!isValid) {
       return errorResponse(res, message, HTTP_STATUS.BAD_REQUEST);
     }
