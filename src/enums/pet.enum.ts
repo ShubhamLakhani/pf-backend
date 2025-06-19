@@ -15,13 +15,12 @@ export enum PetSizeEnum {
 }
 
 export enum PetNeuteredEnum {
-  Yes = 'Yes',
-  Intact = 'Intact',
-  Undetermined = 'Undetermined',
+  Yes = 'Neutered',
+  No = 'Not Neutered',
 }
 
 export enum PetFriendlyEnum {
-  Very = 'Very',
-  Aggressive = 'Aggressive',
-  Dependable = 'Dependable',
+  Very = 'Friendly',
+  Aggressive = 'Shy',
+  Dependable = 'Not Social',
 }
