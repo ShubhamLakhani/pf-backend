@@ -354,6 +354,7 @@ export const createConsultation = async (
         userId: res.locals.userId,
         endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
         consultationType: value.consultationType,
+        consultationStatus: { $ne: ConsultationStatusEnum.pending },
       });
       if (existingConsultation) {
         return errorResponse(
