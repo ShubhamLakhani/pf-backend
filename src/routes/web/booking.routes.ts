@@ -415,6 +415,11 @@ router.post(
  *         required: false
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: isPetParentUpload
+ *         required: false
+ *         schema:
+ *           type: boolean
  *     responses:
  *       200:
  *         description: Service record retrieved successfully

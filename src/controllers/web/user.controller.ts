@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { HTTP_STATUS } from '../../constants';
 import { UploadImageModuleEnum } from '../../enums';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
-import { IUser, serviceModel, userModel } from '../../models';
+import { bookingModel, IUser, serviceModel, userModel } from '../../models';
 import { serviceRecordModel } from '../../models/servicRecord';
 import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { validation } from '../../utils/validate';
@@ -241,9 +241,9 @@ export const updateUserDetails = async (
     //   }
     // }
     let verify = false;
-    if(value.removeAlternateMobileNumber){
+    if (value.removeAlternateMobileNumber) {
       value.isAlternateMobileNumberVerified = false;
-      value.alternateMobileNumber = ''
+      value.alternateMobileNumber = '';
     } else if (value.alternateMobileNumber) {
       const existingUser = await userModel.findOne({
         _id: { $ne: userId },
@@ -379,7 +379,7 @@ export const validateAlternateMobileNumberOtp = async (
 export const resendOtp = async (req: Request, res: Response): Promise<any> => {
   try {
     console.log('in...');
-    
+
     const { isValid, message, value } = validation<ISignIn>(
       req.body,
       signInSchema
@@ -393,7 +393,7 @@ export const resendOtp = async (req: Request, res: Response): Promise<any> => {
     const user = await userModel.findOne({
       alternateMobileNumber: mobileNumber,
     });
-    console.log("🚀 ~ resendOtp ~ user:", user)
+    console.log('🚀 ~ resendOtp ~ user:', user);
     if (!user) {
       return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
     }
@@ -420,7 +420,158 @@ export const resendOtp = async (req: Request, res: Response): Promise<any> => {
       HTTP_STATUS.OK
     );
   } catch (err) {
-    console.log("🚀 ~ resendOtp ~ err:", err)
+    console.log('🚀 ~ resendOtp ~ err:', err);
+    return errorResponse(res, 'Internal Server Error');
+  }
+};
+
+export const getBookingHistoryList = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { petId } = req.query;
+
+    const limit = +(req.query?.limit ?? 10);
+    const page = +(req.query?.page ?? 1);
+    const skip: number = (page - 1) * limit;
+
+    const filter: any = {
+      userId: new mongoose.Types.ObjectId(res.locals.userId),
+    };
+    if (petId) {
+      filter.petId = new mongoose.Types.ObjectId(petId as string);
+    }
+
+    const aggregate: any[] = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                serviceType: 1,
+                slug: 1,
+              },
+            },
+          ],
+          as: 'service',
+        },
+      },
+      {
+        $lookup: {
+          from: 'serviceitems',
+          localField: 'serviceItemId',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                slug: 1,
+              },
+            },
+          ],
+          as: 'serviceItem',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          date: '$startDateTime',
+          amount: 1,
+          status: '$bookingStatus',
+          type: { $literal: 'booking' },
+          serviceId: 1,
+          serviceItemId: 1,
+          appointmentReason: 1,
+          service: { $first: '$service' },
+          serviceItem: { $first: '$serviceItem' },
+        },
+      },
+      {
+        $unionWith: {
+          coll: 'consultations',
+          pipeline: [
+            { $match: filter },
+            {
+              $project: {
+                _id: 1,
+                date: '$startDateTime',
+                amount: 1,
+                status: '$consultationStatus',
+                type: { $literal: 'consultation' },
+                consultationType: 1,
+                euthanasiaType: 1,
+                appointmentReason: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unionWith: {
+          coll: 'travels',
+          pipeline: [
+            { $match: filter },
+            {
+              $project: {
+                _id: 1,
+                date: '$travelDate',
+                amount: 1,
+                type: { $literal: 'travel' },
+                travelType: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $sort: { date: -1 },
+      },
+      {
+        $project: {
+          _id: 1,
+          type: 1,
+          date: 1,
+          title: 1,
+          amount: 1,
+          status: 1,
+          appointmentReason: 1,
+          service: 1,
+          serviceItem: 1,
+          consultationType: 1,
+          euthanasiaType: 1,
+          travelType: 1,
+        },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, ...(limit > 0 ? [{ $limit: limit }] : [])],
+          totalCount: [{ $count: 'total' }],
+        },
+      },
+      {
+        $addFields: {
+          totalCount: {
+            $ifNull: [{ $first: '$totalCount.total' }, 0],
+          },
+        },
+      },
+    ];
+
+    const [bookingHistory] = await bookingModel.aggregate(aggregate);
+
+    return successResponse(
+      res,
+      'Booking History',
+      bookingHistory,
+      HTTP_STATUS.OK
+    );
+  } catch (err) {
     return errorResponse(res, 'Internal Server Error');
   }
 };

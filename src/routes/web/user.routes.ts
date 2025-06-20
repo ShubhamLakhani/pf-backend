@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   deleteUser,
+  getBookingHistoryList,
   getNextVaccinationData,
   getUserDetails,
   resendOtp,
@@ -94,7 +95,6 @@ router.patch(
   updateUserDetails
 );
 
-
 /**
  * @swagger
  * /api/web/user/delete:
@@ -136,7 +136,10 @@ router.delete('/delete', deleteUser);
  *       500:
  *         description: Internal Server Error
  */
-router.post('/validate-alternate-mobile-number-otp', validateAlternateMobileNumberOtp);
+router.post(
+  '/validate-alternate-mobile-number-otp',
+  validateAlternateMobileNumberOtp
+);
 
 /**
  * @swagger
@@ -162,5 +165,37 @@ router.post('/validate-alternate-mobile-number-otp', validateAlternateMobileNumb
  *         description: Internal Server Error
  */
 router.post('/resend-alternate-mobile-number-otp', resendOtp);
+
+/**
+ * @swagger
+ * /api/web/user/booking-history-list:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get booking history list
+ *     tags: [ User ]
+ *     parameters:
+ *       - in: query
+ *         name: petId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking history retrieved successfully
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/booking-history-list', getBookingHistoryList);
 
 export default router;

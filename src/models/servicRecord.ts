@@ -24,6 +24,7 @@ const ServiceRecordSchema: Schema = new Schema(
     serviceItemId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'serviceItems',
+      default: null,
     },
     petId: {
       type: mongoose.Schema.Types.ObjectId,

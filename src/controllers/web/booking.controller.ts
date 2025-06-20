@@ -383,7 +383,7 @@ export const createConsultation = async (
         );
       }
     }
-  
+
     const amount =
       value.consultationType === consultationTypeEnum.euthanasia
         ? serviceConsultationEuthanasiaPriceObj.discountedAmount
@@ -628,14 +628,26 @@ export const getServiceRecordList = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { petId } = req.query;
+    const { petId, serviceId } = req.query;
+
+    const serviceIdSplit =
+      typeof serviceId === 'string'
+        ? serviceId.split(',')
+        : Array.isArray(serviceId)
+        ? serviceId
+        : [];
 
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
-    const sort = (req.query?.sort ?? 'desc');
+    const sort = req.query?.sort ?? 'desc';
     const skip: number = (page - 1) * limit;
+    const isPetParentUpload = req.query.isPetParentUpload
+      ? req.query.isPetParentUpload == 'true'
+        ? true
+        : false
+      : null;
 
-    const [serviceRecord] = await serviceRecordModel.aggregate([
+      const [serviceRecord] = await serviceRecordModel.aggregate([
       {
         $match: {
           userId: new mongoose.Types.ObjectId(res.locals.userId as string),
@@ -643,9 +655,12 @@ export const getServiceRecordList = async (
             { image: { $ne: null } }, // Not null
             { image: { $ne: '' } }, // Not an empty string
             { image: { $exists: true } }, // Exists in the document
-          ],
+               ],
           ...(petId && {
             petId: new mongoose.Types.ObjectId(petId as string),
+          }),
+          ...(serviceIdSplit && serviceIdSplit.length > 0 && {
+            serviceId: { $in: (serviceIdSplit as string[]).map((i: string) => new mongoose.Types.ObjectId(i)) }
           }),
         },
       },
@@ -657,6 +672,22 @@ export const getServiceRecordList = async (
       //     as: 'serviceItems',
       //   },
       // },
+      {
+        $lookup: {
+          from: 'bookings',
+          localField: '_id',
+          foreignField: 'serviceRecordId',
+          as: 'booking',
+        },
+      },
+      {
+        $addFields: {
+          isPetParentUpload: {
+            $eq: [{ $size: '$booking' }, 0],
+          },
+        },
+      },
+      { $match: { ...(isPetParentUpload && { isPetParentUpload }) } },
       {
         $lookup: {
           from: 'services',
@@ -830,12 +861,12 @@ export const updateServiceRecord = async (
     }
 
     const { id, ...rest } = value;
-    await serviceRecordModel.updateOne({ _id: id }, rest, { new: true });
+    const data = await serviceRecordModel.findOneAndUpdate({ _id: id }, rest, { new: true });
 
     return successResponse(
       res,
       'Service record updated successfully',
-      null,
+      data,
       HTTP_STATUS.OK
     );
   } catch (error) {
@@ -1146,7 +1177,7 @@ export const createTravel = async (
     value.userId = res.locals.userId;
     value.providerOrderId = razorpayOrder.id;
     value.amount = amount;
-    
+
     await travelModel.create(value);
 
     return successResponse(
