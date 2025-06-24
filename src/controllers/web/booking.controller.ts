@@ -336,7 +336,8 @@ export const createConsultation = async (
     if (value.startDateTime && value.endDateTime) {
       const checkBooking = isValidTimeRangeForOnlineService(
         value.startDateTime,
-        value.endDateTime
+        value.endDateTime,
+        value.euthanasiaType
       );
 
       if (!checkBooking) {
@@ -347,40 +348,42 @@ export const createConsultation = async (
         );
       }
 
-      const currentDate = new Date();
+      if (value.euthanasiaType === euthanasiaTypeEnum.online) {
+        const currentDate = new Date();
 
-      // Check if the user has an active consultation (end date should be in the future)
-      const existingConsultation = await consultationModel.findOne({
-        userId: res.locals.userId,
-        endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
-        consultationType: value.consultationType,
-        consultationStatus: { $ne: ConsultationStatusEnum.pending },
-      });
-      if (existingConsultation) {
-        return errorResponse(
-          res,
-          'You already have an active consultation.',
-          HTTP_STATUS.BAD_REQUEST
-        );
-      }
+        // Check if the user has an active consultation (end date should be in the future)
+        const existingConsultation = await consultationModel.findOne({
+          userId: res.locals.userId,
+          endDateTime: { $gt: currentDate }, // Consultation end date must be greater than the current date
+          consultationType: value.consultationType,
+          consultationStatus: { $ne: ConsultationStatusEnum.pending },
+        });
+        if (existingConsultation) {
+          return errorResponse(
+            res,
+            'You already have an active consultation.',
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
 
-      const startDate = new Date(value.startDateTime);
-      startDate.setSeconds(0, 0); // Reset seconds and milliseconds
+        const startDate = new Date(value.startDateTime);
+        startDate.setSeconds(0, 0); // Reset seconds and milliseconds
 
-      const endDate = new Date(value.endDateTime);
-      endDate.setSeconds(59, 0); // Reset seconds and milliseconds
+        const endDate = new Date(value.endDateTime);
+        endDate.setSeconds(59, 0); // Reset seconds and milliseconds
 
-      const checkSlotAvailable = await consultationModel.findOne({
-        startDateTime: { $gte: startDate },
-        endDateTime: { $lte: endDate },
-        consultationType: value.consultationType,
-      });
-      if (checkSlotAvailable) {
-        return errorResponse(
-          res,
-          'Slot already booked.',
-          HTTP_STATUS.BAD_REQUEST
-        );
+        const checkSlotAvailable = await consultationModel.findOne({
+          startDateTime: { $gte: startDate },
+          endDateTime: { $lte: endDate },
+          consultationType: value.consultationType,
+        });
+        if (checkSlotAvailable) {
+          return errorResponse(
+            res,
+            'Slot already booked.',
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
       }
     }
 
@@ -631,11 +634,11 @@ export const getServiceRecordList = async (
     const { petId, serviceId } = req.query;
 
     const serviceIdSplit =
-      typeof serviceId === 'string'
+      serviceId && typeof serviceId === 'string'
         ? serviceId.split(',')
         : Array.isArray(serviceId)
-        ? serviceId
-        : [];
+          ? serviceId
+          : [];
 
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
@@ -647,7 +650,7 @@ export const getServiceRecordList = async (
         : false
       : null;
 
-      const [serviceRecord] = await serviceRecordModel.aggregate([
+    const [serviceRecord] = await serviceRecordModel.aggregate([
       {
         $match: {
           userId: new mongoose.Types.ObjectId(res.locals.userId as string),
@@ -655,13 +658,18 @@ export const getServiceRecordList = async (
             { image: { $ne: null } }, // Not null
             { image: { $ne: '' } }, // Not an empty string
             { image: { $exists: true } }, // Exists in the document
-               ],
+          ],
           ...(petId && {
             petId: new mongoose.Types.ObjectId(petId as string),
           }),
-          ...(serviceIdSplit && serviceIdSplit.length > 0 && {
-            serviceId: { $in: (serviceIdSplit as string[]).map((i: string) => new mongoose.Types.ObjectId(i)) }
-          }),
+          ...(serviceIdSplit &&
+            serviceIdSplit.length > 0 && {
+              serviceId: {
+                $in: (serviceIdSplit as string[]).map(
+                  (i: string) => new mongoose.Types.ObjectId(i)
+                ),
+              },
+            }),
         },
       },
       // {
@@ -687,7 +695,7 @@ export const getServiceRecordList = async (
           },
         },
       },
-      { $match: { ...(isPetParentUpload && { isPetParentUpload }) } },
+      { $match: { ...(req.query.isPetParentUpload && { isPetParentUpload }) } },
       {
         $lookup: {
           from: 'services',
@@ -752,6 +760,7 @@ export const getServiceRecordList = async (
       HTTP_STATUS.OK
     );
   } catch (error) {
+    console.log('🚀 ~ error:', error);
     return errorResponse(res, 'Internal Server Error');
   }
 };
@@ -861,7 +870,9 @@ export const updateServiceRecord = async (
     }
 
     const { id, ...rest } = value;
-    const data = await serviceRecordModel.findOneAndUpdate({ _id: id }, rest, { new: true });
+    const data = await serviceRecordModel.findOneAndUpdate({ _id: id }, rest, {
+      new: true,
+    });
 
     return successResponse(
       res,
@@ -1264,7 +1275,8 @@ const isValidTimeRange = (date: Date) => {
 
 const isValidTimeRangeForOnlineService = (
   startDateTime: Date,
-  endDateTime: Date
+  endDateTime: Date,
+  euthanasiaType?: euthanasiaTypeEnum
 ) => {
   const date = new Date();
   if (!(new Date(startDateTime) >= date && new Date(endDateTime) >= date)) {
@@ -1285,8 +1297,9 @@ const isValidTimeRangeForOnlineService = (
 
   // Condition 2: Check if start and end time difference is exactly 15 minutes
   const timeDifferenceInMinutes = (endDate - startDate) / (1000 * 60); // Difference in minutes
+  const minDuration = euthanasiaType === euthanasiaTypeEnum.home ? 240 : 15;
   const isTimeDifferenceFifteenMinutes =
-    Math.round(timeDifferenceInMinutes) === 15;
+    Math.round(timeDifferenceInMinutes) === minDuration;
 
   // Condition 3: Check if date difference from current date is less than 15 days
   const dateDifferenceInDays =

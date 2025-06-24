@@ -22,6 +22,7 @@ export interface IConsultation extends IMoongo {
   consultationStatus?: ConsultationStatusEnum;
   consultationType: consultationTypeEnum;
   amount: number;
+  euthanasiaType?: euthanasiaTypeEnum;
 }
 
 // Create the Consultation schema

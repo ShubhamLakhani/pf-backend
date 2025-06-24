@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { HTTP_STATUS } from '../../constants';
-import { UploadImageModuleEnum } from '../../enums';
+import { euthanasiaTypeEnum, UploadImageModuleEnum } from '../../enums';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
 import { bookingModel, IUser, serviceModel, userModel } from '../../models';
 import { serviceRecordModel } from '../../models/servicRecord';
@@ -53,6 +53,7 @@ export const getNextVaccinationData = async (
         $match: {
           serviceId: new mongoose.Types.ObjectId(serviceVaccination?._id),
           userId: new mongoose.Types.ObjectId(res.locals.userId as string),
+          euthanasiaType: {$ne: euthanasiaTypeEnum.home},
           ...(petId &&
             petId !== '' && {
               petId: new mongoose.Types.ObjectId(petId as string),

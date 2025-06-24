@@ -30,18 +30,18 @@ export const consultationBookingValidationSchema = Joi.object({
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required(),
   startDateTime: Joi.when('consultationType', {
-    is: 'Euthanasia',
+    is: consultationTypeEnum.euthanasia,
     then: Joi.when('euthanasiaType', {
-      is: 'online',
+      is: euthanasiaTypeEnum.online,
       then: Joi.date().iso().required(),
       otherwise: Joi.date().iso().optional(),
     }),
     otherwise: Joi.date().iso().required(),
   }),
   endDateTime: Joi.when('consultationType', {
-    is: 'Euthanasia',
+    is: consultationTypeEnum.euthanasia,
     then: Joi.when('euthanasiaType', {
-      is: 'online',
+      is: euthanasiaTypeEnum.online,
       then: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
       otherwise: Joi.date().iso().greater(Joi.ref('startDateTime')).optional(),
     }),

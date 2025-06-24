@@ -92,7 +92,7 @@ export const updatePet = async (req: Request, res: Response): Promise<any> => {
       updateObj.slug = toSlug(updateObj.name, true);
     }
 
-    const updatePet = await petModel.findOneAndUpdate({ _id: value.id }, updateObj);
+    const updatePet = await petModel.findOneAndUpdate({ _id: value.id }, updateObj, { new: true });
 
     return successResponse(
       res,
