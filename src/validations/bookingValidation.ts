@@ -21,7 +21,7 @@ export const bookingValidationSchema = Joi.object({
     .allow(null),
   startDateTime: Joi.date().iso().required(),
   endDateTime: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
-  appointmentReason: Joi.string().allow(null),
+  appointmentReason: Joi.string().allow(null, "").optional(),
   timeSlotLabel: Joi.string().allow(null).optional(),
 });
 
@@ -47,7 +47,7 @@ export const consultationBookingValidationSchema = Joi.object({
     }),
     otherwise: Joi.date().iso().greater(Joi.ref('startDateTime')).required(),
   }),
-  appointmentReason: Joi.string().allow(null),
+  appointmentReason: Joi.string().allow(null, "").optional(),
   consultationType: Joi.string()
     .valid(...Object.values(consultationTypeEnum))
     .required(),
