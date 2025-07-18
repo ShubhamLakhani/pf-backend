@@ -83,31 +83,31 @@ export const getServiceItemList = async (
       },
     ];
 
-    if (isServiceVaccination) {
-      aggregate.push(
-        ...[
-          {
-            $addFields: {
-              sortOrder: {
-                $cond: {
-                  if: { $eq: ['$metaData.notify', true] },
-                  then: 0,
-                  else: 1,
-                },
-              },
-            },
-          },
-          {
-            $sort: {
-              sortOrder: 1,
-              'metaData.validDays': 1,
-            },
-          },
-        ]
-      );
-    } else {
-      aggregate.push({ $sort: { createdAt: -1 } });
-    }
+    // if (isServiceVaccination) {
+    //   aggregate.push(
+    //     ...[
+    //       {
+    //         $addFields: {
+    //           sortOrder: {
+    //             $cond: {
+    //               if: { $eq: ['$metaData.notify', true] },
+    //               then: 0,
+    //               else: 1,
+    //             },
+    //           },
+    //         },
+    //       },
+    //       {
+    //         $sort: {
+    //           sortOrder: 1,
+    //           'metaData.validDays': 1,
+    //         },
+    //       },
+    //     ]
+    //   );
+    // } else {
+      aggregate.push({ $sort: { createdAt: 1 } });
+    // }
 
     const data = await serviceItemsModel.aggregate(aggregate);
 
