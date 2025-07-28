@@ -10,16 +10,28 @@ interface DynamicVariable {
   }[];
 }
 
+interface SMSData {
+  serviceName: string | undefined;
+  customerName: string;
+  amount: number;
+  date: string;
+  time: string;
+  customeNumber?: string;
+}
+
 interface SendMessageOptions {
   mobileNumber: string;
   templateName: string;
   dynamicVariables?: DynamicVariable[] | string[];
   mediaUrl?: string;
+  dateAndTimeForSMS?: string[];
+  smsData: SMSData;
 }
 
 const MSG91_API_URL = process.env.MSG91_API_URL || 'https://control.msg91.com';
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
 const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
+const MSG91_BOOKING_CONFIRMATION_TEMPLATE_ID = process.env.MSG91_BOOKING_CONFIRMATION_TEMPLATE_ID;
 const MSG91_INTEGRATED_NUMBER = process.env.MSG91_INTEGRATED_NUMBER;
 
 export const sendOtpToUser = async (mobileNumber: string, otp: number) => {
@@ -53,11 +65,85 @@ export const sendOtpToUser = async (mobileNumber: string, otp: number) => {
     throw new Error('Error sending OTP');
   }
 };
+export const sendBookingConfirmationToUser = async (mobileNumber: string, smsData: SMSData) => {
+  try {
+    console.log({ mobileNumber})
+    const response = await axios.post(
+      MSG91_API_URL + '/api/v5/flow',
+      {
+        template_id: MSG91_BOOKING_CONFIRMATION_TEMPLATE_ID,
+        short_url: '0',
+        realTimeResponse: '1',
+        recipients: [
+          {
+            mobiles: `91${mobileNumber}`,
+            name: smsData.customerName,
+            service_type: smsData.serviceName,
+            date: smsData.date,
+            time: smsData.time,
+            amount: smsData.amount,
+          },
+        ],
+      },
+      {
+        headers: {
+          Accept: 'application/json',
+          authkey: MSG91_AUTH_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Success:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw new Error('Error sending Booking Confirmation');
+  }
+};
+export const sendBookingConfirmationToAdmin = async (mobileNumber: string, smsData: SMSData) => {
+  try {
+    console.log({ mobileNumber})
+    const response = await axios.post(
+      MSG91_API_URL + '/api/v5/flow',
+      {
+        template_id: MSG91_BOOKING_CONFIRMATION_TEMPLATE_ID,
+        short_url: '0',
+        realTimeResponse: '1',
+        recipients: [
+          {
+            mobiles: `91${mobileNumber}`,
+            name: smsData.customerName,
+            service_type: smsData.serviceName,
+            date: smsData.date,
+            time: smsData.time,
+            amount: smsData.amount,
+            contact_number: smsData.customeNumber
+          },
+        ],
+      },
+      {
+        headers: {
+          Accept: 'application/json',
+          authkey: MSG91_AUTH_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Success:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw new Error('Error sending Booking Confirmation');
+  }
+};
 
 export const sendMessage = async ({
   mobileNumber,
   templateName,
   dynamicVariables = [],
+  smsData
 }: SendMessageOptions): Promise<any> => {
   /** Send welcome message on whatsapp */
 
@@ -111,6 +197,17 @@ export const sendMessage = async ({
       }
     );
     const result = response.data;
+    sendBookingConfirmationToUser(
+      mobileNumber,
+      smsData
+    );
+    sendBookingConfirmationToAdmin(
+      '9611754001',
+      {
+        ...smsData,
+        customeNumber: mobileNumber
+      },
+    );
     console.log('🚀 ~ result:', result);
     return result;
   } catch (error: any) {

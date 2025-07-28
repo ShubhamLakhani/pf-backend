@@ -8,6 +8,7 @@ export interface IContactUs extends IMoongo {
   mobileNumber: string;
   address: string;
   email: string;
+  serviceId: string;
 }
 
 // Create the ContactUs schema
@@ -17,6 +18,11 @@ const ContactUsSchema: Schema = new Schema(
     mobileNumber: { type: String, required: true },
     address: { type: String, required: true },
     email: { type: String, required: true },
+    serviceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      require: true,
+      ref: 'services',
+    },
   },
   {
     timestamps: true,

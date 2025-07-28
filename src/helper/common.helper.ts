@@ -110,3 +110,33 @@ export const formatDateTime = (dateString: Date) => {
   });
   return { formattedDate, formattedTime };
 };
+// Utility function to format date and time for SMS
+export const formatDateTimeForSMS = (dateString: Date) => {
+  const date = new Date(dateString);
+
+  // Format day with suffix (st, nd, rd, th)
+  const day = date.getDate();
+  interface SuffixFunction {
+    (day: number): string;
+  }
+
+  const suffix: SuffixFunction = (day: number): string => {
+    if (day > 3 && day < 21) return 'th'; // For 11th to 13th
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  const formattedDateForSMS = `${day}${suffix(day)} ${date.toLocaleString('en-US', { month: 'long' })} ${date.getFullYear()}`;
+
+  // Format time in 12-hour format
+  const formattedTimeForSMS = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  return { formattedDateForSMS, formattedTimeForSMS };
+};
