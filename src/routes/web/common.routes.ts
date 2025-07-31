@@ -67,7 +67,7 @@ router.post('/create/delete-request', userAuth, createDeleteRequest);
  *       500:
  *         description: Internal Server Error
  */
-router.post('/create/contact-us', userAuth, createContactUsRequest);
+router.post('/create/contact-us', /* userAuth, */ createContactUsRequest);
 
 
 export default router;

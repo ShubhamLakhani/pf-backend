@@ -148,7 +148,7 @@ export const sendMessage = async ({
 }: SendMessageOptions): Promise<any> => {
   /** Send welcome message on whatsapp */
 
-  console.log('mobileNumber', mobileNumber, 'templateName', templateName, 'dynamicVariables', dynamicVariables);
+  console.log('mobileNumber', mobileNumber, 'templateName', templateName, 'dynamicVariables', dynamicVariables, MSG91_INTEGRATED_NUMBER);
   const raw: any = {
     integrated_number: MSG91_INTEGRATED_NUMBER,
     content_type: 'template',
