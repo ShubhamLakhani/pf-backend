@@ -18,6 +18,6 @@ router.use('/booking', bookingRoutes);
 router.use('/user', userAuth, userRoutes);
 router.use('/branch', userAuth, branchRoutes);
 router.use('/breed', userAuth, breedRoutes);
-router.use('/', userAuth, commonRoutes);
+router.use('/', commonRoutes);
 
 export default router;
