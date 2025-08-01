@@ -25,7 +25,7 @@ const sendOtp = async (
 ): Promise<any> => {
   const { otp, expiresAt } = generateOtpWithExpiry();
 
-  let testOtp = mobileNumber === '9624216260' ? 123456 : otp;
+  let testOtp = mobileNumber === '9624216260' ? 1234 : otp;
 
   await userModel.updateOne(
     { _id: userId },
