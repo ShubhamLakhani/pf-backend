@@ -152,7 +152,7 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
 
     const { mobileNumber } = value;
 
-    const user = await userModel.findOne({
+    let user = await userModel.findOne({
       $or: [
         { mobileNumber },
         {
@@ -165,7 +165,13 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
       isActive: true,
     });
     if (!user) {
-      return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
+      // const { otp, expiresAt } = generateOtpWithExpiry();
+      user = await userModel.create({
+        mobileNumber,
+        // otp,
+        // otpExpiry: expiresAt,
+      });
+      // return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
     }
 
     return await sendOtp(res, user._id as string, mobileNumber);

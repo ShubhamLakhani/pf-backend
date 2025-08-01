@@ -15,6 +15,9 @@ export const getAllUserList = async (
     const page = +(req.query?.page ?? 1);
     const skip: number = (page - 1) * limit;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const data = await userModel.aggregate([
       ...(filter
         ? [
@@ -26,6 +29,28 @@ export const getAllUserList = async (
           ]
         : []),
       { $sort: { createdAt: -1 } },
+      {
+        $addFields: {
+          isNew: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $dateToString: {
+                      format: '%Y-%m-%d',
+                      date: '$createdAt',
+                      timezone: 'Asia/Kolkata', // Use your timezone here
+                    },
+                  },
+                  today.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }), // ensures 'YYYY-MM-DD'
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
       {
         $project: {
           otp: 0,

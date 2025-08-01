@@ -21,9 +21,9 @@ export interface IUser extends IMoongo {
 // Create the User schema
 const UserSchema: Schema = new Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: false },
     mobileNumber: { type: String, required: true, unique: true },
-    address: { type: String, required: true },
+    address: { type: String, required: false },
     profileImage: { type: String, required: false },
     otp: { type: Number, default: null },
     otpExpiry: { type: Number },

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { OtpWithExpiry } from '../utils/common.interface';
 import { serviceItemsModel } from '../models';
 
-export const generateOtp = (): number => randomInt(100000, 1000000);
+export const generateOtp = (): number => randomInt(1000, 10000);
 
 export const generateOtpWithExpiry = (): OtpWithExpiry => {
   const otp = generateOtp();
