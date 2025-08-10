@@ -14,7 +14,7 @@ export const bookingValidationSchema = Joi.object({
     .optional(),
   petId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .required(),
+    .optional().allow("", null),
   branchId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .optional()
@@ -28,7 +28,7 @@ export const bookingValidationSchema = Joi.object({
 export const consultationBookingValidationSchema = Joi.object({
   petId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .required(),
+    .optional().allow("", null),
   startDateTime: Joi.when('consultationType', {
     is: consultationTypeEnum.euthanasia,
     then: Joi.when('euthanasiaType', {
@@ -117,7 +117,7 @@ export const consultationUpdateValidationSchema = Joi.object({
 export const travelBookingValidationSchema = Joi.object({
   petId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .required(),
+    .optional().allow("", null),
   travelType: Joi.string()
     .valid(...Object.values(TravelTypeEnum))
     .required(),

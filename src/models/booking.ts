@@ -44,7 +44,6 @@ const BookingSchema: Schema = new Schema(
     },
     petId: {
       type: mongoose.Schema.Types.ObjectId,
-      require: true,
       ref: 'pets',
     },
     branchId: {

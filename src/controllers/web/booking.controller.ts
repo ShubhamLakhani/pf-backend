@@ -411,6 +411,7 @@ export const createConsultation = async (
       HTTP_STATUS.CREATED
     );
   } catch (error) {
+    console.log({ error })
     return errorResponse(res, 'Internal Server Error');
   }
 };
@@ -1188,6 +1189,9 @@ export const createTravel = async (
     value.userId = res.locals.userId;
     value.providerOrderId = razorpayOrder.id;
     value.amount = amount;
+    if(!value.petId) {
+      delete value.petId;
+    }
 
     await travelModel.create(value);
 
@@ -1202,6 +1206,7 @@ export const createTravel = async (
       HTTP_STATUS.CREATED
     );
   } catch (error) {
+    console.log('🚀 ~ error:', error);
     return errorResponse(res, 'Internal Server Error');
   }
 };
@@ -1289,7 +1294,8 @@ const isValidTimeRangeForOnlineService = (
 
   // Condition 1: Check if start date is greater than 2 hours from the current time
   const durationInHours = (startDate - currentDate) / (1000 * 60 * 60); // Difference in hours
-  const isStartDateGreaterThanTwoHours = durationInHours > 2;
+  console.log({ durationInHours })
+  const isStartDateGreaterThanTwoHours = durationInHours > 0.5;
   console.log(
     'Start date is more than 2 hours ahead of current date:',
     isStartDateGreaterThanTwoHours

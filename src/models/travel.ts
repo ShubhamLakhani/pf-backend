@@ -5,7 +5,7 @@ import { required } from 'joi';
 
 // Define the Travel interface
 export interface ITravel extends IMoongo {
-  petId: Types.ObjectId;
+  petId?: Types.ObjectId;
   travelType: TravelTypeEnum;
   travelDate: Date;
   microchipNumber?: string | null;
@@ -29,7 +29,6 @@ const TravelSchema = new mongoose.Schema(
   {
     petId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref: 'Pet',
     },
     travelType: {

@@ -43,9 +43,9 @@ export const createDefaultService = async () => {
       description: 'Vaccinations at your dorrstap hassle-free.',
     },
     {
-      name: 'Pet Health Check-Up',
-      slug: 'check-ups',
-      serviceType: 'Health',
+      name: 'Vet home visit',
+      slug: 'vet-home-visit',
+      serviceType: 'Consultation',
       description: "Compreshensive check-ups for your pet's health.",
     },
     {
