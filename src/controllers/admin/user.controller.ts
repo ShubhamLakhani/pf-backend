@@ -5,6 +5,7 @@ import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { deleteRequestModel } from '../../models/deleteRequest';
 import { DeleteRequestStatusEnum } from '../../enums';
 import { FileType, generateExportFile } from '../../utils/exportFile';
+import mongoose from 'mongoose';
 
 export const getAllUserList = async (
   req: Request,
@@ -29,8 +30,6 @@ export const getAllUserList = async (
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    console.log({ startDate, endDate, today });
-
     const data = await userModel.aggregate([
       {
         $match: {
@@ -44,7 +43,11 @@ export const getAllUserList = async (
         ? [
             {
               $match: {
-                name: { $regex: new RegExp(filter as string, 'i') },
+                $or: [
+                  { name: { $regex: new RegExp(filter as string, 'i') } },
+                  { mobileNumber: { $regex: new RegExp(filter as string, 'i') } },
+                  { alternateMobileNumber: { $regex: new RegExp(filter as string, 'i') } }
+                ],
               },
             },
           ]
@@ -109,7 +112,7 @@ export const exportUserReport = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { filter, fromDate, toDate, fileType } = req.query;
+    const { filter, fromDate, toDate, fileType, ids } = req.query;
     const limit = +(req.query?.limit ?? 10);
     const page = +(req.query?.page ?? 1);
     const skip: number = (page - 1) * limit;
@@ -127,6 +130,20 @@ export const exportUserReport = async (
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    let idList: string[] = [];
+    
+    if (ids) {
+      try {
+        const parsed = JSON.parse(ids as string);
+        if (Array.isArray(parsed)) {
+          idList = parsed;
+        }
+      } catch (error) {
+        console.error("Invalid ids query param format:", error);
+        return errorResponse(res, 'Invalid format for ids. Must be a JSON stringified array.');
+      }
+    }
+
     const [data] = await userModel.aggregate([
       {
         $match: {
@@ -134,6 +151,9 @@ export const exportUserReport = async (
               endDate && {
                 createdAt: { $gte: startDate, $lte: endDate },  
               }),
+          ...(idList.length > 0 && {
+              _id: { $in: idList.map(id => new mongoose.Types.ObjectId(id)) },
+            }),
         }
       },
       ...(filter
@@ -191,69 +211,65 @@ export const exportUserReport = async (
 
     console.log({ data: JSON.stringify(data) });
 
-    // interface BookingItem {
-    //   [key: string]: any;
-    //   startDateTime: Date | string;
-    //   endDateTime: Date | string;
-    // }
+    interface UserItem {
+      [key: string]: any;
+      _id: string;
+      mobileNumber: string;
+      isActive: boolean;
+      alternateMobileNumber?: string | null;
+      createdAt: Date | string;
+      updatedAt: Date | string;
+      address?: string;
+      name?: string;
+      isNew?: boolean;
+      profileImage?: string;
+    }
 
-    // data.data = (data.data as BookingItem[]).map((item: BookingItem): BookingItem => {
-    //   // Helper function to format date as dd-mm-yyyy
-    //   const formatDate = (date: Date | string): string => {
-    //     const d = new Date(date);
-    //     const day = d.getDate().toString().padStart(2, '0');
-    //     const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    //       const year = d.getFullYear();
-    //       const hours = d.getHours().toString().padStart(2, '0');
-    //       const minutes = d.getMinutes().toString().padStart(2, '0');
-    //       const seconds = d.getSeconds().toString().padStart(2, '0');
-    //     return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-    //   };
+    // Helper function to format date as dd-mm-yyyy HH:MM:SS
+    const formatDate = (date: Date | string): string => {
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      const seconds = d.getSeconds().toString().padStart(2, '0');
+      return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+    };
 
-    //   return {
-    //     ...item,
-    //     startDateTime: formatDate(item.startDateTime), // Format the startDateTime
-    //     endDateTime: formatDate(item.endDateTime),     // Format the endDateTime
-    //   };
-    // });
+    data.data = (data.data as UserItem[]).map((item: UserItem): UserItem => ({
+      ...item,
+      createdAt: formatDate(item.createdAt),
+      updatedAt: formatDate(item.updatedAt),
+    }));
 
-    // const columns = [
-    //   { header: 'Booking ID', key: 'bookingId', width: 35 },
-    //   { header: 'User Name', key: 'userName', width: 25 },
-    //   { header: 'Pet Name', key: 'petName', width: 20 },
-    //   { header: 'Pet Type', key: 'petType', width: 20 },
-    //   { header: 'Service Name', key: 'serviceName', width: 25 },
-    //   { header: 'Service Item', key: 'serviceItemName', width: 25 },
-    //   { header: 'Branch', key: 'branchName', width: 20 },
-    //   { header: 'Start Date', key: 'startDate', width: 22 },
-    //   { header: 'End Date', key: 'endDate', width: 22 },
-    //   { header: 'Time Slot', key: 'timeSlotLabel', width: 20 },
-    //   { header: 'Reason', key: 'appointmentReason', width: 30 },
-    //   { header: 'Payment Id', key: 'providerOrderId', width: 30 },
-    //   { header: 'Paid Amount', key: 'paidAmount', width: 20 },
-    //   { header: 'Payment Status', key: 'bookingPaymentStatus', width: 20 },
-    //   { header: 'Booking Status', key: 'bookingStatus', width: 20 }
-    // ];
+    const columns = [
+      { header: 'User ID', key: '_id', width: 35 },
+      { header: 'Name', key: 'name', width: 25 },
+      { header: 'Mobile Number', key: 'mobileNumber', width: 20 },
+      { header: 'Alternate Mobile Number', key: 'alternateMobileNumber', width: 20 },
+      { header: 'Is Active', key: 'isActive', width: 10 },
+      { header: 'Address', key: 'address', width: 30 },
+      { header: 'Created At', key: 'createdAt', width: 22 },
+      { header: 'Updated At', key: 'updatedAt', width: 22 },
+      { header: 'Is New', key: 'isNew', width: 10 },
+      { header: 'Profile Image', key: 'profileImage', width: 40 }
+    ];
 
-    // const rowsData = data.data.map((row: BookingItem) => ({
-    //   bookingId: row._id?.toString() || '',
-    //   userName: row.userName || '',
-    //   petName: row.petName || '',
-    //   petType: row.petType || '',
-    //   serviceName: row.serviceName || '',
-    //   serviceItemName: row.serviceItemName || '',
-    //   branchName: row.branchName || '',
-    //   startDate: row.startDateTime || '',
-    //   endDate: row.endDateTime || '',
-    //   timeSlotLabel: row.timeSlotLabel || '',
-    //   appointmentReason: row.appointmentReason || '',
-    //   providerOrderId: row.providerOrderId || '',
-    //   paidAmount: row.paidAmount || '',
-    //   bookingPaymentStatus: row.bookingPaymentStatus || '',
-    //   bookingStatus: row.bookingStatus || ''
-    // }));
+    const rowsData = data.data.map((row: UserItem) => ({
+      _id: row._id || '',
+      name: row.name || '',
+      mobileNumber: row.mobileNumber || '',
+      alternateMobileNumber: row.alternateMobileNumber || '',
+      isActive: row.isActive ? 'Yes' : 'No',
+      address: row.address || '',
+      createdAt: row.createdAt || '',
+      updatedAt: row.updatedAt || '',
+      isNew: row.isNew ? 'Yes' : 'No',
+      profileImage: row.profileImage || '',
+    }));
 
-    // const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res);
+    await generateExportFile(rowsData, columns, fileType as FileType, res, "User");
     return
 
     // return successResponse(

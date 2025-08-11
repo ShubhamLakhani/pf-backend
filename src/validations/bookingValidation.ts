@@ -68,10 +68,10 @@ export const vaccinationLastRecordValidationSchema = Joi.object({
   serviceId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required(),
-  name: Joi.string().when('serviceItemId', {
-    is: Joi.alternatives().try(null, ''),
-    then: Joi.required(),
-  }),
+  // name: Joi.string().when('serviceItemId', {
+  //   is: Joi.alternatives().try(null, ''),
+  //   then: Joi.required(),
+  // }),
   petId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required(),

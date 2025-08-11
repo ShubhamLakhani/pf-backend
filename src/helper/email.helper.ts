@@ -38,14 +38,6 @@ const contectUsHtml = ({ name, mobileNumber, email, address, serviceName }:any)=
               <td><strong>Service</strong></td>
               <td>${serviceName}</td>
             </tr>
-            <tr>
-              <td><strong>Email</strong></td>
-              <td>${email}</td>
-            </tr>
-            <tr>
-              <td><strong>Address</strong></td>
-              <td>${address}</td>
-            </tr>
           </table>
 
           <p style="margin-top: 30px; font-size: 12px; color: #999999; text-align: center;">

@@ -67,6 +67,24 @@ export const getContactUsList = async (
           }),
         },
       },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          as: 'serviceDetails',
+        },
+      },
+      {
+        $addFields: {
+          serviceName: { $arrayElemAt: ['$serviceDetails.name', 0] },
+        },
+      },
+      {
+        $project: {
+          serviceDetails: 0, // Exclude serviceDetails field
+        },
+      },
       { $sort: { createdAt: -1 } },
       {
         $facet: {

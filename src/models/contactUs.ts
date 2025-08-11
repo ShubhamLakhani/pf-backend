@@ -16,8 +16,8 @@ const ContactUsSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
     mobileNumber: { type: String, required: true },
-    address: { type: String, required: true },
-    email: { type: String, required: true },
+    address: { type: String },
+    email: { type: String },
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
       require: true,

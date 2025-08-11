@@ -406,7 +406,7 @@ export const exportBookingReport = async (
         bookingStatus: row.bookingStatus || ''
       }));
 
-      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res);
+      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res, "Booking");
       return
     // }
 
@@ -682,7 +682,7 @@ export const exportConsultationList = async (
           paymentStatus: row.paymentStatus || ''
         }));
 
-      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res);
+      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res, "Booking");
       return
 
     // return successResponse(
@@ -1300,7 +1300,7 @@ export const exportTravelList = async (
           paymentStatus: row.paymentStatus || ''
         }));
 
-      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res);
+      const exportedData = await generateExportFile(rowsData, columns, fileType as FileType, res, "Booking");
       return
 
     // return successResponse(

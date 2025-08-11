@@ -596,6 +596,16 @@ export const addServiceRecord = async (
       }
 
       value.name = service.name;
+    } else {
+      const service = await serviceModel.findOne({
+        _id: value.serviceId,
+      });
+      
+      if (!service) {
+        return errorResponse(res, 'Service invalid.', HTTP_STATUS.BAD_REQUEST);
+      }
+
+      value.name = service.name;
     }
 
     const image = await uploadFile(

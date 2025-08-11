@@ -19,8 +19,8 @@ export const deleteRequestValidationSchema = Joi.object({
 export const contactUsValidationSchema = Joi.object({
   name: Joi.string().required(),
   mobileNumber: Joi.string().required(),
-  email: Joi.string().required(),
-  address: Joi.string().required(),
+  // email: Joi.string().required(),
+  // address: Joi.string().required(),
   serviceId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .optional(),
