@@ -126,9 +126,7 @@ export const getBookingList = async (
           serviceItemName: {
             $first: '$serviceItems.name',
           },
-          paidAmount: {
-            $first: '$serviceItems.discountedAmount',
-          },
+          paidAmount: '$amount',
           petName: {
             $first: '$pet.name',
           },
@@ -175,6 +173,7 @@ export const getBookingList = async (
       HTTP_STATUS.OK
     );
   } catch (error) {
+    console.error('Error fetching booking list:', error);
     return errorResponse(res, 'Internal Server Error');
   }
 };
