@@ -19,7 +19,7 @@ export const generateOtpWithExpiry = (): OtpWithExpiry => {
 
 export const generateAccessToken = (userId: string) =>
   jwt.sign({ userId }, process.env.JWT_SECRET || 'dev-secret', {
-    expiresIn: 1,
+    expiresIn: process.env.JWT_EXPIRY || '1h',
   });
 
 export const sanitizeFileName = (filename: string): string =>
