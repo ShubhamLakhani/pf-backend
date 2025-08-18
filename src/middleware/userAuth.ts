@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { HTTP_STATUS } from '../constants';
 import { userModel } from '../models';
 import { errorResponse } from '../utils/responseHandler';
@@ -18,6 +18,7 @@ export const userAuth = async (
       token,
       process.env.JWT_SECRET as string
     );
+    console.log({ decodedToken })
     const userId = decodedToken?.userId;
 
     const valid = await userModel.findOne({
@@ -34,6 +35,15 @@ export const userAuth = async (
 
     return next();
   } catch (error) {
+    // console.log("hsgdbjf sdb cfjdsbcsjfdbijbs", error);
+    if (error instanceof TokenExpiredError) {
+      return errorResponse(res, 'Token expired.', HTTP_STATUS.UNAUTHORIZED);
+    }
+    if (error instanceof JsonWebTokenError) {
+      return errorResponse(res, 'Invalid token.', HTTP_STATUS.UNAUTHORIZED);
+    }
+    console.log('Auth error:', error);
+    
     return errorResponse(res, 'Internal Server Error');
   }
 };
