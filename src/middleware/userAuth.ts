@@ -37,10 +37,10 @@ export const userAuth = async (
   } catch (error) {
     // console.log("hsgdbjf sdb cfjdsbcsjfdbijbs", error);
     if (error instanceof TokenExpiredError) {
-      return errorResponse(res, 'Token expired.', HTTP_STATUS.UNAUTHORIZED);
+      return errorResponse(res, 'Unauthorized.', HTTP_STATUS.UNAUTHORIZED);
     }
     if (error instanceof JsonWebTokenError) {
-      return errorResponse(res, 'Invalid token.', HTTP_STATUS.UNAUTHORIZED);
+      return errorResponse(res, 'Unauthorized.', HTTP_STATUS.UNAUTHORIZED);
     }
     console.log('Auth error:', error);
     
