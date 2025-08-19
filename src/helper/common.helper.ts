@@ -102,12 +102,21 @@ export const generateUniqueSlug = async (name: string, id = null) => {
 // Utility function to format date and time
 export const formatDateTime = (dateString: Date) => {
   const date = new Date(dateString);
-  const formattedDate = date.toISOString().split('T')[0];
-  const formattedTime = date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-  });
+  const formattedDate = new Intl.DateTimeFormat('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
+
+  // Format time in IST
+  const formattedTime = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
+
   return { formattedDate, formattedTime };
 };
 // Utility function to format date and time for SMS
@@ -115,7 +124,7 @@ export const formatDateTimeForSMS = (dateString: Date) => {
   const date = new Date(dateString);
 
   // Format day with suffix (st, nd, rd, th)
-  const day = date.getDate();
+  const day = date.getUTCDate();
   interface SuffixFunction {
     (day: number): string;
   }
@@ -129,14 +138,28 @@ export const formatDateTimeForSMS = (dateString: Date) => {
       default: return 'th';
     }
   };
-  const formattedDateForSMS = `${day}${suffix(day)} ${date.toLocaleString('en-US', { month: 'long' })} ${date.getFullYear()}`;
+  const formattedDateForSMS = new Intl.DateTimeFormat('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
+
+const dayWithSuffix = formattedDateForSMS.replace(
+    /^(\d{1,2})/,
+    (d) => `${d}${suffix(Number(d))}`
+  );
+
 
   // Format time in 12-hour format
-  const formattedTimeForSMS = date.toLocaleTimeString('en-US', {
+  const formattedTimeForSMS = new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-  });
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
 
-  return { formattedDateForSMS, formattedTimeForSMS };
+
+  return { formattedDateForSMS: dayWithSuffix, formattedTimeForSMS };
+
 };

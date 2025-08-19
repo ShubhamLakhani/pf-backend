@@ -14,7 +14,7 @@ const startApp = async () => {
   await connectDB();
   // Create default data
   import('./seeders');
-testmodel()
+// testmodel()
 };
 startApp();
 
