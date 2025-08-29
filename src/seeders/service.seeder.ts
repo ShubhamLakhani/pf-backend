@@ -1,6 +1,7 @@
 import e from 'cors';
 import {
   serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationEuthanasiaPriceObjOnline,
   serviceConsultationPriceObj,
 } from '../constants';
 import { consultationTypeEnum } from '../enums';
@@ -28,6 +29,13 @@ export const createDefaultService = async () => {
         metaData[consultationTypeEnum.euthanasia];
       serviceConsultationEuthanasiaPriceObj.amount = amount;
       serviceConsultationEuthanasiaPriceObj.discountedAmount = discountedAmount;
+    }
+  
+    if (metaData?.[consultationTypeEnum.euthanasiaOnline]) {
+      const { amount, discountedAmount } =
+        metaData[consultationTypeEnum.euthanasiaOnline];
+      serviceConsultationEuthanasiaPriceObjOnline.amount = amount;
+      serviceConsultationEuthanasiaPriceObjOnline.discountedAmount = discountedAmount;
     }
   }
 

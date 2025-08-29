@@ -3,9 +3,10 @@ import mongoose from 'mongoose';
 import { HTTP_STATUS } from '../../constants';
 import {
   serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationEuthanasiaPriceObjOnline,
   serviceConsultationPriceObj,
 } from '../../constants/common.constants';
-import { consultationTypeEnum, UploadImageModuleEnum } from '../../enums';
+import { consultationTypeEnum, euthanasiaTypeEnum, UploadImageModuleEnum } from '../../enums';
 import { generateUniqueSlug } from '../../helper/common.helper';
 import { toSlug } from '../../helper/common.helper';
 import { deleteFile, uploadFile } from '../../helper/s3.helper';
@@ -466,7 +467,11 @@ export const setServiceConsultationPrice = async (
       }
     );
 
-    if (consultationType === consultationTypeEnum.euthanasia) {
+    if (consultationType === consultationTypeEnum.euthanasiaOnline) {
+      serviceConsultationEuthanasiaPriceObjOnline.amount = value.amount;
+      serviceConsultationEuthanasiaPriceObjOnline.discountedAmount =
+        value.discountedAmount;
+    } else if(consultationType === consultationTypeEnum.euthanasia) {
       serviceConsultationEuthanasiaPriceObj.amount = value.amount;
       serviceConsultationEuthanasiaPriceObj.discountedAmount =
         value.discountedAmount;

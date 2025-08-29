@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import {
   HTTP_STATUS,
   serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationEuthanasiaPriceObjOnline,
   serviceConsultationPriceObj,
 } from '../../constants';
 import {
@@ -390,6 +391,8 @@ export const createConsultation = async (
     const amount =
       value.consultationType === consultationTypeEnum.euthanasia
         ? serviceConsultationEuthanasiaPriceObj.discountedAmount
+        : value.consultationType === consultationTypeEnum.euthanasiaOnline
+        ? serviceConsultationEuthanasiaPriceObjOnline.discountedAmount
         : serviceConsultationPriceObj.discountedAmount;
     const razorpayOrder = await razorpayPayment(amount, {
       isConsultationBooking: true,

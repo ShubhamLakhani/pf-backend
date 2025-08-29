@@ -5,7 +5,6 @@ import swaggerJsdoc from './config/swagger';
 import routes from './routes';
 import dotenv from 'dotenv';
 import { bookingModel } from './models';
-import mongoose from 'mongoose';
 
 dotenv.config();
 

@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { consultationTypeEnum } from '../enums';
+import { consultationTypeEnum, euthanasiaTypeEnum } from '../enums';
 
 export const createServiceItemSchema = Joi.object({
   serviceId: Joi.string()

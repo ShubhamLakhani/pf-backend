@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { consultationTypeEnum } from '../enums';
+import { consultationTypeEnum, euthanasiaTypeEnum } from '../enums';
 
 export interface IMoongo extends Document {
   createdAt?: Date;
@@ -15,4 +15,5 @@ export interface IServicePrice {
   amount: number;
   discountedAmount: number;
   consultationType: consultationTypeEnum;
+  euthanasiaType: euthanasiaTypeEnum;
 }

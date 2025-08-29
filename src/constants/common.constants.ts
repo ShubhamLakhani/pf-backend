@@ -7,6 +7,11 @@ export const serviceConsultationEuthanasiaPriceObj = {
   discountedAmount: 100,
 };
 
+export const serviceConsultationEuthanasiaPriceObjOnline = {
+  amount: 100,
+  discountedAmount: 100,
+};
+
 export const whatsappTemplatesName:Record<string, string> = {
   Euthanasia: 'euthanasia_appointment_new',
   Normal: 'online_consultation' /* Normal(Consultation) appointment */,

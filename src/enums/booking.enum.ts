@@ -28,6 +28,7 @@ export enum TravelTypeEnum {
 export enum consultationTypeEnum {
   normal = 'Normal',
   euthanasia = 'Euthanasia',
+  euthanasiaOnline = 'Euthanasia Online',
 }
 
 export enum euthanasiaTypeEnum {

@@ -3,13 +3,14 @@ import mongoose from 'mongoose';
 import {
   HTTP_STATUS,
   serviceConsultationEuthanasiaPriceObj,
+  serviceConsultationEuthanasiaPriceObjOnline,
   serviceConsultationPriceObj,
 } from '../../constants';
 import { serviceItemsModel, serviceModel } from '../../models';
 import { errorResponse, successResponse } from '../../utils/responseHandler';
 import { validation } from '../../utils/validate';
 import { paramMongoIdSchema } from '../../validations';
-import { consultationTypeEnum } from '../../enums';
+import { consultationTypeEnum, euthanasiaTypeEnum } from '../../enums';
 
 export const getServiceList = async (
   _req: Request,
@@ -208,6 +209,8 @@ export const getServiceConsultationPrice = (
   const priceObj =
     consultationType === consultationTypeEnum.euthanasia
       ? serviceConsultationEuthanasiaPriceObj
+      : consultationType === consultationTypeEnum.euthanasiaOnline
+      ? serviceConsultationEuthanasiaPriceObjOnline
       : serviceConsultationPriceObj;
 
   return successResponse(
