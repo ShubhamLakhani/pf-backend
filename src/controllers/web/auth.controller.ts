@@ -47,6 +47,7 @@ const sendOtp = async (
 
 export const signUp = async (req: Request, res: Response): Promise<any> => {
   try {
+    return errorResponse(res, 'Please update the application.', HTTP_STATUS.UNAUTHORIZED);
     const { isValid, message, value } = validation<ISignUp>(
       req.body,
       signUpSchema
@@ -60,17 +61,17 @@ export const signUp = async (req: Request, res: Response): Promise<any> => {
     const existingUser = await userModel.findOne({
       $or: [{ mobileNumber }, { alternateMobileNumber: mobileNumber }],
     });
-    if (existingUser) {
-      if (!existingUser.isActive) {
-        await userModel.deleteOne({ _id: existingUser._id });
-      } else {
-        return errorResponse(
-          res,
-          'User already registered with this number.',
-          HTTP_STATUS.BAD_REQUEST
-        );
-      }
-    }
+    // if (existingUser) {
+    //   if (!existingUser.isActive) {
+    //     await userModel.deleteOne({ _id: existingUser._id });
+    //   } else {
+    //     return errorResponse(
+    //       res,
+    //       'User already registered with this number.',
+    //       HTTP_STATUS.BAD_REQUEST
+    //     );
+    //   }
+    // }
 
     const { otp, expiresAt } = generateOtpWithExpiry();
     await userModel.create({
@@ -142,6 +143,7 @@ export const validateSignUpOtp = async (
 
 export const signIn = async (req: Request, res: Response): Promise<any> => {
   try {
+    return errorResponse(res, 'Please update the application.', HTTP_STATUS.UNAUTHORIZED);
     const { isValid, message, value } = validation<ISignIn>(
       req.body,
       signInSchema
@@ -174,7 +176,9 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
       // return errorResponse(res, 'User not found.', HTTP_STATUS.NOT_FOUND);
     }
 
-    return await sendOtp(res, user._id as string, mobileNumber);
+    return errorResponse(res, 'Please update the application.', HTTP_STATUS.UNAUTHORIZED);
+
+    // return await sendOtp(res, user._id as string, mobileNumber);
   } catch (err) {
     return errorResponse(res, 'Internal Server Error');
   }
