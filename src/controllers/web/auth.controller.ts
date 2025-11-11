@@ -143,7 +143,7 @@ export const validateSignUpOtp = async (
 
 export const signIn = async (req: Request, res: Response): Promise<any> => {
   try {
-    return errorResponse(res, 'Please update the application.', HTTP_STATUS.UNAUTHORIZED);
+    return errorResponse(res, 'Please update the application.', HTTP_STATUS.NOT_FOUND);
     const { isValid, message, value } = validation<ISignIn>(
       req.body,
       signInSchema
